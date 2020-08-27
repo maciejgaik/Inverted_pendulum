@@ -52,7 +52,7 @@ uint8_t START_POSITION_FLAG = 0;
 uint8_t START_BALANCING = 0;
 
 volatile int16_t pendulum_pulse_count = 0;
-volatile int16_t pendulum_positions = 0;
+volatile float pendulum_degree = 0;
 
 volatile int16_t motor_pulse_count = 0;
 volatile int16_t motor_positions = 0;
@@ -132,10 +132,10 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
 
-	  pendulum_pulse_count = TIM1->CNT;
-	  pendulum_positions = pendulum_pulse_count/4;
+	  pendulum_pulse_count = TIM3->CNT;
+	  pendulum_degree = pendulum_pulse_count*360.0/1600.0;
 
-	  motor_pulse_count = TIM3->CNT;
+	  motor_pulse_count = TIM1->CNT;
 	  motor_positions = motor_pulse_count/4;
   }
   /* USER CODE END 3 */
@@ -205,7 +205,7 @@ static void MX_TIM1_Init(void)
   htim1.Instance = TIM1;
   htim1.Init.Prescaler = 0;
   htim1.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim1.Init.Period = 259;
+  htim1.Init.Period = 65535;
   htim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim1.Init.RepetitionCounter = 0;
   htim1.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
@@ -213,11 +213,11 @@ static void MX_TIM1_Init(void)
   sConfig.IC1Polarity = TIM_ICPOLARITY_RISING;
   sConfig.IC1Selection = TIM_ICSELECTION_DIRECTTI;
   sConfig.IC1Prescaler = TIM_ICPSC_DIV1;
-  sConfig.IC1Filter = 15;
+  sConfig.IC1Filter = 10;
   sConfig.IC2Polarity = TIM_ICPOLARITY_RISING;
   sConfig.IC2Selection = TIM_ICSELECTION_DIRECTTI;
   sConfig.IC2Prescaler = TIM_ICPSC_DIV1;
-  sConfig.IC2Filter = 15;
+  sConfig.IC2Filter = 10;
   if (HAL_TIM_Encoder_Init(&htim1, &sConfig) != HAL_OK)
   {
     Error_Handler();
@@ -255,10 +255,10 @@ static void MX_TIM3_Init(void)
   htim3.Instance = TIM3;
   htim3.Init.Prescaler = 0;
   htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim3.Init.Period = 0;
+  htim3.Init.Period = 65535;
   htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
-  sConfig.EncoderMode = TIM_ENCODERMODE_TI1;
+  sConfig.EncoderMode = TIM_ENCODERMODE_TI12;
   sConfig.IC1Polarity = TIM_ICPOLARITY_RISING;
   sConfig.IC1Selection = TIM_ICSELECTION_DIRECTTI;
   sConfig.IC1Prescaler = TIM_ICPSC_DIV1;

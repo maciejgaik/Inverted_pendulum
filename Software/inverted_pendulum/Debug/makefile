@@ -40,8 +40,8 @@ inverted_pendulum.bin \
 all: inverted_pendulum.elf secondary-outputs
 
 # Tool invocations
-inverted_pendulum.elf: $(OBJS) $(USER_OBJS) /Users/mike/Inverted_pendulum/Software/inverted_pendulum/STM32F407VGTX_FLASH.ld
-	arm-none-eabi-gcc -o "inverted_pendulum.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"/Users/mike/Inverted_pendulum/Software/inverted_pendulum/STM32F407VGTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="inverted_pendulum.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+inverted_pendulum.elf: $(OBJS) $(USER_OBJS) C:\Users\Mike\Documents\GitHub\Inverted_pendulum\Software\inverted_pendulum\STM32F407VGTX_FLASH.ld
+	arm-none-eabi-gcc -o "inverted_pendulum.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\Mike\Documents\GitHub\Inverted_pendulum\Software\inverted_pendulum\STM32F407VGTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="inverted_pendulum.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 
