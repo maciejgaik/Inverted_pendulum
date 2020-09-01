@@ -61,10 +61,11 @@ volatile int16_t motor_pulse_count = 0;
 volatile int16_t cart_position = 0;
 
 uint16_t motor_pwm_duty = 0;
-int16_t motor_pwm = 0;
+uint16_t cart_dest = 0;
 
 uint8_t LED_FLAG = 0;
 uint8_t MOTOR_FLAG = 0;
+uint8_t FLAG_READY = 0;
 
 /* USER CODE END PV */
 
@@ -80,8 +81,12 @@ static void MX_TIM10_Init(void);
 
 /* Interrupts */
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
-	if(GPIO_Pin == START_POS_Pin) START_POSITION_FLAG = 1;
-	else if(GPIO_Pin == Button_Pin) START_BALANCING = 1;
+	if(GPIO_Pin == START_POS_Pin){
+		START_POSITION_FLAG=1;
+	}
+	else if(GPIO_Pin == Button_Pin){
+		START_BALANCING = 1;
+	}
 }
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
@@ -118,13 +123,15 @@ void motor_init(){
 	motor_speed(-750);
 }
 
-void motor_go_to(uint16_t pos){
-	if(pos>MAX_CART_POS)
-		pos=MAX_CART_POS;
-
-	while(cart_position!=pos)
-		motor_speed(750);
-	motor_stop();
+void motor_go(){
+	if(cart_dest>MAX_CART_POS)
+		cart_dest=MAX_CART_POS;
+	if(cart_dest-10>cart_position)
+		motor_speed(800);
+	else if(cart_dest+10<cart_position)
+		motor_speed(-800);
+	else
+		motor_stop();
 }
 
 /* USER CODE END PFP */
@@ -147,7 +154,9 @@ int main(void)
   /* MCU Configuration--------------------------------------------------------*/
 
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
-  HAL_Init();
+
+
+	HAL_Init();
 
   /* USER CODE BEGIN Init */
 
@@ -188,6 +197,14 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
 
+	  if(START_POSITION_FLAG){
+		  START_POSITION_FLAG=0;
+		  motor_stop();
+		  FLAG_READY=1;
+		  TIM1->CNT=0;
+		  HAL_Delay(1000);
+	  }
+
 	  pendulum_pulse_count = TIM3->CNT;
 	  pendulum_degree = pendulum_pulse_count*360.0/1600.0;
 
@@ -198,12 +215,18 @@ int main(void)
 		  HAL_GPIO_TogglePin(LED_B_GPIO_Port, LED_B_Pin);
 		  LED_FLAG = 0;
 	  }
+	  if(FLAG_READY){
+		  if(390<cart_position && 410>cart_position)
+			  cart_dest=10;
+		  if(0<cart_position && 20>cart_position)
+			  cart_dest=400;
+		  motor_go();
+	  }
 
-		if(START_POSITION_FLAG){
-		  motor_stop();
-		  TIM1->CNT=0;
-		}
-
+	  if(START_BALANCING){
+			FLAG_READY = 0;
+			motor_stop();
+	  }
   }
   /* USER CODE END 3 */
 }
