@@ -33,6 +33,8 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+#define POSITION_RATIO 0.15 // 30teeth/2mm/100
+#define MAX_CART_POS 433
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -44,6 +46,7 @@
 TIM_HandleTypeDef htim1;
 TIM_HandleTypeDef htim3;
 TIM_HandleTypeDef htim4;
+TIM_HandleTypeDef htim10;
 DMA_HandleTypeDef hdma_tim4_ch1;
 
 /* USER CODE BEGIN PV */
@@ -55,9 +58,13 @@ volatile int16_t pendulum_pulse_count = 0;
 volatile float pendulum_degree = 0;
 
 volatile int16_t motor_pulse_count = 0;
-volatile int16_t motor_positions = 0;
+volatile int16_t cart_position = 0;
 
-int16_t motor_pwm_duty = 0;
+uint16_t motor_pwm_duty = 0;
+int16_t motor_pwm = 0;
+
+uint8_t LED_FLAG = 0;
+uint8_t MOTOR_FLAG = 0;
 
 /* USER CODE END PV */
 
@@ -68,12 +75,56 @@ static void MX_DMA_Init(void);
 static void MX_TIM4_Init(void);
 static void MX_TIM1_Init(void);
 static void MX_TIM3_Init(void);
+static void MX_TIM10_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* Interrupts */
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 	if(GPIO_Pin == START_POS_Pin) START_POSITION_FLAG = 1;
 	else if(GPIO_Pin == Button_Pin) START_BALANCING = 1;
+}
+
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
+	if(htim==&htim10){
+		LED_FLAG = 1;
+	}
+}
+
+void motor_speed(int16_t speed){
+	if(speed>0){
+		HAL_GPIO_WritePin(MOTOR_IN1_GPIO_Port, MOTOR_IN1_Pin, GPIO_PIN_SET);
+		HAL_GPIO_WritePin(MOTOR_IN2_GPIO_Port, MOTOR_IN2_Pin, GPIO_PIN_RESET);
+		motor_pwm_duty=speed;
+	}
+	else{
+		HAL_GPIO_WritePin(MOTOR_IN1_GPIO_Port, MOTOR_IN1_Pin, GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(MOTOR_IN2_GPIO_Port, MOTOR_IN2_Pin, GPIO_PIN_SET);
+		motor_pwm_duty=-speed;
+	}
+}
+
+void motor_stop(){
+	HAL_GPIO_WritePin(MOTOR_IN1_GPIO_Port, MOTOR_IN1_Pin, GPIO_PIN_RESET);
+	HAL_GPIO_WritePin(MOTOR_IN2_GPIO_Port, MOTOR_IN2_Pin, GPIO_PIN_RESET);
+	motor_pwm_duty=1000;
+}
+
+void motor_init(){
+	motor_speed(800);
+	HAL_Delay(50);
+	motor_stop();
+	motor_speed(-800);
+	HAL_Delay(20);
+	motor_speed(-750);
+}
+
+void motor_go_to(uint16_t pos){
+	if(pos>MAX_CART_POS)
+		pos=MAX_CART_POS;
+
+	while(cart_position!=pos)
+		motor_speed(750);
+	motor_stop();
 }
 
 /* USER CODE END PFP */
@@ -115,12 +166,17 @@ int main(void)
   MX_TIM4_Init();
   MX_TIM1_Init();
   MX_TIM3_Init();
+  MX_TIM10_Init();
   /* USER CODE BEGIN 2 */
 
   HAL_TIM_Encoder_Start(&htim1, TIM_CHANNEL_ALL);
   HAL_TIM_Encoder_Start(&htim3, TIM_CHANNEL_ALL);
 
-  HAL_TIM_PWM_Start_DMA(&htim4, TIM_CHANNEL_1, &motor_pwm_duty, 2);
+  HAL_TIM_Base_Start_IT(&htim10);
+
+  HAL_TIM_PWM_Start_DMA(&htim4, TIM_CHANNEL_1, &motor_pwm_duty, 1);
+
+  motor_init();
 
   /* USER CODE END 2 */
 
@@ -136,7 +192,18 @@ int main(void)
 	  pendulum_degree = pendulum_pulse_count*360.0/1600.0;
 
 	  motor_pulse_count = TIM1->CNT;
-	  motor_positions = motor_pulse_count/4;
+	  cart_position = motor_pulse_count*POSITION_RATIO;
+
+	  if(LED_FLAG){
+		  HAL_GPIO_TogglePin(LED_B_GPIO_Port, LED_B_Pin);
+		  LED_FLAG = 0;
+	  }
+
+		if(START_POSITION_FLAG){
+		  motor_stop();
+		  TIM1->CNT=0;
+		}
+
   }
   /* USER CODE END 3 */
 }
@@ -342,6 +409,37 @@ static void MX_TIM4_Init(void)
 
 }
 
+/**
+  * @brief TIM10 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM10_Init(void)
+{
+
+  /* USER CODE BEGIN TIM10_Init 0 */
+
+  /* USER CODE END TIM10_Init 0 */
+
+  /* USER CODE BEGIN TIM10_Init 1 */
+
+  /* USER CODE END TIM10_Init 1 */
+  htim10.Instance = TIM10;
+  htim10.Init.Prescaler = 9999;
+  htim10.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim10.Init.Period = 8399;
+  htim10.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim10.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim10) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM10_Init 2 */
+
+  /* USER CODE END TIM10_Init 2 */
+
+}
+
 /** 
   * Enable DMA controller clock
   */
@@ -371,6 +469,7 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOE_CLK_ENABLE();
   __HAL_RCC_GPIOD_CLK_ENABLE();
+  __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
@@ -385,18 +484,18 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(Button_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : START_POS_Pin */
-  GPIO_InitStruct.Pin = START_POS_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(START_POS_GPIO_Port, &GPIO_InitStruct);
-
   /*Configure GPIO pins : LED_G_Pin LED_O_Pin LED_R_Pin LED_B_Pin */
   GPIO_InitStruct.Pin = LED_G_Pin|LED_O_Pin|LED_R_Pin|LED_B_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : START_POS_Pin */
+  GPIO_InitStruct.Pin = START_POS_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(START_POS_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pins : MOTOR_IN2_Pin MOTOR_IN1_Pin */
   GPIO_InitStruct.Pin = MOTOR_IN2_Pin|MOTOR_IN1_Pin;
@@ -408,6 +507,9 @@ static void MX_GPIO_Init(void)
   /* EXTI interrupt init*/
   HAL_NVIC_SetPriority(EXTI0_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(EXTI0_IRQn);
+
+  HAL_NVIC_SetPriority(EXTI9_5_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
 
 }
 

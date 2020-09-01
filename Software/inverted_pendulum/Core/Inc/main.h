@@ -63,8 +63,6 @@ void Error_Handler(void);
 #define Button_Pin GPIO_PIN_0
 #define Button_GPIO_Port GPIOA
 #define Button_EXTI_IRQn EXTI0_IRQn
-#define START_POS_Pin GPIO_PIN_1
-#define START_POS_GPIO_Port GPIOA
 #define LED_G_Pin GPIO_PIN_12
 #define LED_G_GPIO_Port GPIOD
 #define LED_O_Pin GPIO_PIN_13
@@ -73,6 +71,9 @@ void Error_Handler(void);
 #define LED_R_GPIO_Port GPIOD
 #define LED_B_Pin GPIO_PIN_15
 #define LED_B_GPIO_Port GPIOD
+#define START_POS_Pin GPIO_PIN_7
+#define START_POS_GPIO_Port GPIOC
+#define START_POS_EXTI_IRQn EXTI9_5_IRQn
 #define MOTOR_IN2_Pin GPIO_PIN_4
 #define MOTOR_IN2_GPIO_Port GPIOB
 #define MOTOR_IN1_Pin GPIO_PIN_5
