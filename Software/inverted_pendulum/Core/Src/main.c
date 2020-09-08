@@ -23,7 +23,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "pid.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -33,8 +33,9 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define POSITION_RATIO 0.15 // 30teeth/2mm/100
+#define POSITION_RATIO 0.2 // 30teeth/2mm/100
 #define MAX_CART_POS 433
+#define CART_SIZE 32
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -47,6 +48,7 @@ TIM_HandleTypeDef htim1;
 TIM_HandleTypeDef htim3;
 TIM_HandleTypeDef htim4;
 TIM_HandleTypeDef htim10;
+TIM_HandleTypeDef htim11;
 DMA_HandleTypeDef hdma_tim4_ch1;
 
 /* USER CODE BEGIN PV */
@@ -66,6 +68,15 @@ uint16_t cart_dest = 0;
 uint8_t LED_FLAG = 0;
 uint8_t MOTOR_FLAG = 0;
 uint8_t FLAG_READY = 0;
+uint8_t PID_FLAG = 0;
+
+cpid_t motor_pid;
+cpid_t pendulum_pid;
+
+int16_t maxpid = 0;
+
+volatile int16_t motor_pid_controll = 0;
+volatile int16_t pendulum_pid_controll = 0;
 
 /* USER CODE END PV */
 
@@ -77,6 +88,7 @@ static void MX_TIM4_Init(void);
 static void MX_TIM1_Init(void);
 static void MX_TIM3_Init(void);
 static void MX_TIM10_Init(void);
+static void MX_TIM11_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* Interrupts */
@@ -93,43 +105,94 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 	if(htim==&htim10){
 		LED_FLAG = 1;
 	}
+	if(htim==&htim11){
+		PID_FLAG = 1;
+	}
 }
 
 void motor_speed(int16_t speed){
-	if(speed>0){
-		HAL_GPIO_WritePin(MOTOR_IN1_GPIO_Port, MOTOR_IN1_Pin, GPIO_PIN_SET);
-		HAL_GPIO_WritePin(MOTOR_IN2_GPIO_Port, MOTOR_IN2_Pin, GPIO_PIN_RESET);
-		motor_pwm_duty=speed;
+	if(speed < 0){
+		if(cart_position > 5){
+			if(cart_position > 20){
+				HAL_GPIO_WritePin(MOTOR_IN1_GPIO_Port, MOTOR_IN1_Pin, GPIO_PIN_RESET);
+				HAL_GPIO_WritePin(MOTOR_IN2_GPIO_Port, MOTOR_IN2_Pin, GPIO_PIN_SET);
+				motor_pwm_duty=-speed;
+			}
+			else{
+				HAL_GPIO_WritePin(MOTOR_IN1_GPIO_Port, MOTOR_IN1_Pin, GPIO_PIN_RESET);
+				HAL_GPIO_WritePin(MOTOR_IN2_GPIO_Port, MOTOR_IN2_Pin, GPIO_PIN_SET);
+				motor_pwm_duty=45;
+			}
+		}
+		else{
+			HAL_GPIO_WritePin(MOTOR_IN1_GPIO_Port, MOTOR_IN1_Pin, GPIO_PIN_RESET);
+			HAL_GPIO_WritePin(MOTOR_IN2_GPIO_Port, MOTOR_IN2_Pin, GPIO_PIN_RESET);
+		}
+	}
+	else if(speed > 0){
+		if(cart_position < 428){
+			if(cart_position < 413){
+				HAL_GPIO_WritePin(MOTOR_IN1_GPIO_Port, MOTOR_IN1_Pin, GPIO_PIN_SET);
+				HAL_GPIO_WritePin(MOTOR_IN2_GPIO_Port, MOTOR_IN2_Pin, GPIO_PIN_RESET);
+				motor_pwm_duty=speed;
+			}
+			else{
+				HAL_GPIO_WritePin(MOTOR_IN1_GPIO_Port, MOTOR_IN1_Pin, GPIO_PIN_SET);
+				HAL_GPIO_WritePin(MOTOR_IN2_GPIO_Port, MOTOR_IN2_Pin, GPIO_PIN_RESET);
+				motor_pwm_duty=45;
+			}
+		}
+		else{
+			HAL_GPIO_WritePin(MOTOR_IN1_GPIO_Port, MOTOR_IN1_Pin, GPIO_PIN_RESET);
+			HAL_GPIO_WritePin(MOTOR_IN2_GPIO_Port, MOTOR_IN2_Pin, GPIO_PIN_RESET);
+		}
 	}
 	else{
 		HAL_GPIO_WritePin(MOTOR_IN1_GPIO_Port, MOTOR_IN1_Pin, GPIO_PIN_RESET);
-		HAL_GPIO_WritePin(MOTOR_IN2_GPIO_Port, MOTOR_IN2_Pin, GPIO_PIN_SET);
-		motor_pwm_duty=-speed;
+		HAL_GPIO_WritePin(MOTOR_IN2_GPIO_Port, MOTOR_IN2_Pin, GPIO_PIN_RESET);
 	}
 }
+
+//void motor_speed(int16_t speed){
+//	if(speed < 0){
+//		HAL_GPIO_WritePin(MOTOR_IN1_GPIO_Port, MOTOR_IN1_Pin, GPIO_PIN_RESET);
+//		HAL_GPIO_WritePin(MOTOR_IN2_GPIO_Port, MOTOR_IN2_Pin, GPIO_PIN_SET);
+//		motor_pwm_duty=-speed;
+//	}
+//	else if(speed > 0){
+//		HAL_GPIO_WritePin(MOTOR_IN1_GPIO_Port, MOTOR_IN1_Pin, GPIO_PIN_SET);
+//		HAL_GPIO_WritePin(MOTOR_IN2_GPIO_Port, MOTOR_IN2_Pin, GPIO_PIN_RESET);
+//		motor_pwm_duty=speed;
+//	}
+//	else{
+//		HAL_GPIO_WritePin(MOTOR_IN1_GPIO_Port, MOTOR_IN1_Pin, GPIO_PIN_RESET);
+//		HAL_GPIO_WritePin(MOTOR_IN2_GPIO_Port, MOTOR_IN2_Pin, GPIO_PIN_RESET);
+//	}
+//}
 
 void motor_stop(){
 	HAL_GPIO_WritePin(MOTOR_IN1_GPIO_Port, MOTOR_IN1_Pin, GPIO_PIN_RESET);
 	HAL_GPIO_WritePin(MOTOR_IN2_GPIO_Port, MOTOR_IN2_Pin, GPIO_PIN_RESET);
-	motor_pwm_duty=1000;
+	motor_pwm_duty=100;
 }
 
 void motor_init(){
-	motor_speed(800);
-	HAL_Delay(50);
-	motor_stop();
-	motor_speed(-800);
-	HAL_Delay(20);
-	motor_speed(-750);
+	HAL_GPIO_WritePin(MOTOR_IN1_GPIO_Port, MOTOR_IN1_Pin, GPIO_PIN_SET);
+	HAL_GPIO_WritePin(MOTOR_IN2_GPIO_Port, MOTOR_IN2_Pin, GPIO_PIN_RESET);
+	motor_pwm_duty=45;
+	HAL_Delay(100);
+	HAL_GPIO_WritePin(MOTOR_IN1_GPIO_Port, MOTOR_IN1_Pin, GPIO_PIN_RESET);
+	HAL_GPIO_WritePin(MOTOR_IN2_GPIO_Port, MOTOR_IN2_Pin, GPIO_PIN_SET);
+	motor_pwm_duty=45;
 }
 
 void motor_go(){
 	if(cart_dest>MAX_CART_POS)
 		cart_dest=MAX_CART_POS;
 	if(cart_dest-10>cart_position)
-		motor_speed(800);
+		motor_speed(80);
 	else if(cart_dest+10<cart_position)
-		motor_speed(-800);
+		motor_speed(-80);
 	else
 		motor_stop();
 }
@@ -155,7 +218,6 @@ int main(void)
 
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
 
-
 	HAL_Init();
 
   /* USER CODE BEGIN Init */
@@ -176,17 +238,39 @@ int main(void)
   MX_TIM1_Init();
   MX_TIM3_Init();
   MX_TIM10_Init();
+  MX_TIM11_Init();
   /* USER CODE BEGIN 2 */
 
   HAL_TIM_Encoder_Start(&htim1, TIM_CHANNEL_ALL);
   HAL_TIM_Encoder_Start(&htim3, TIM_CHANNEL_ALL);
 
   HAL_TIM_Base_Start_IT(&htim10);
+  HAL_TIM_Base_Start_IT(&htim11);
 
   HAL_TIM_PWM_Start_DMA(&htim4, TIM_CHANNEL_1, &motor_pwm_duty, 1);
 
   motor_init();
 
+
+	pid_init(&motor_pid, 1.f, 20.f, 1.f, 1);
+	motor_pid.p_max = 4095;
+	motor_pid.p_min = -4095;
+	motor_pid.i_max = 4095;
+	motor_pid.i_min = -4095;
+	motor_pid.d_max = 4095;
+	motor_pid.d_min = -4095;
+	motor_pid.total_max = 100;
+	motor_pid.total_min = -100;
+
+	pid_init(&pendulum_pid, 80.f, 20.f, 40.f, 1);
+	pendulum_pid.p_max = 4095;
+	pendulum_pid.p_min = -4095;
+	pendulum_pid.i_max = 4095;
+	pendulum_pid.i_min = -4095;
+	pendulum_pid.d_max = 4095;
+	pendulum_pid.d_min = -4095;
+	pendulum_pid.total_max = 100;
+	pendulum_pid.total_min = -100;
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -198,15 +282,16 @@ int main(void)
     /* USER CODE BEGIN 3 */
 
 	  if(START_POSITION_FLAG){
-		  START_POSITION_FLAG=0;
 		  motor_stop();
-		  FLAG_READY=1;
+//		  FLAG_READY=1;
 		  TIM1->CNT=0;
-		  HAL_Delay(1000);
+		 // HAL_Delay(2000);
+		  START_POSITION_FLAG=0;
+		 // TIM3->CNT = 0;
 	  }
 
-	  pendulum_pulse_count = TIM3->CNT;
-	  pendulum_degree = pendulum_pulse_count*360.0/1600.0;
+	  pendulum_pulse_count = TIM3->CNT/8;
+	  pendulum_degree = pendulum_pulse_count*360.0/1600.0*8.0;
 
 	  motor_pulse_count = TIM1->CNT;
 	  cart_position = motor_pulse_count*POSITION_RATIO;
@@ -216,16 +301,28 @@ int main(void)
 		  LED_FLAG = 0;
 	  }
 	  if(FLAG_READY){
-		  if(390<cart_position && 410>cart_position)
-			  cart_dest=10;
-		  if(0<cart_position && 20>cart_position)
-			  cart_dest=400;
-		  motor_go();
+		  if(PID_FLAG){
+			  pendulum_pid_controll = -pid_calc(&pendulum_pid, pendulum_pulse_count, 100);
+		  	  motor_speed(pendulum_pid_controll);
+		  }
+//		  if(390<cart_position && 410>cart_position)
+//			  cart_dest=10;
+//		  if(0<cart_position && 20>cart_position)
+//			  cart_dest=400;
+//		  if(PID_FLAG){
+//			  motor_pid_controll = pid_calc(&motor_pid, cart_position, 216);
+//			  motor_speed(motor_pid_controll);
+//		  }
 	  }
 
 	  if(START_BALANCING){
-			FLAG_READY = 0;
-			motor_stop();
+		  HAL_Delay(50);
+		  if(!FLAG_READY) FLAG_READY=1;
+		  else{
+			  FLAG_READY=0;
+			  motor_stop();
+		  }
+		  START_BALANCING=0;
 	  }
   }
   /* USER CODE END 3 */
@@ -246,14 +343,13 @@ void SystemClock_Config(void)
   __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
   /** Initializes the CPU, AHB and APB busses clocks 
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
-  RCC_OscInitStruct.HSIState = RCC_HSI_ON;
-  RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
+  RCC_OscInitStruct.HSEState = RCC_HSE_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
-  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
-  RCC_OscInitStruct.PLL.PLLM = 8;
-  RCC_OscInitStruct.PLL.PLLN = 168;
-  RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
+  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
+  RCC_OscInitStruct.PLL.PLLM = 25;
+  RCC_OscInitStruct.PLL.PLLN = 400;
+  RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV4;
   RCC_OscInitStruct.PLL.PLLQ = 4;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
@@ -268,7 +364,7 @@ void SystemClock_Config(void)
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV4;
   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV2;
 
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_5) != HAL_OK)
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_3) != HAL_OK)
   {
     Error_Handler();
   }
@@ -393,9 +489,9 @@ static void MX_TIM4_Init(void)
 
   /* USER CODE END TIM4_Init 1 */
   htim4.Instance = TIM4;
-  htim4.Init.Prescaler = 41;
+  htim4.Init.Prescaler = 249;
   htim4.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim4.Init.Period = 999;
+  htim4.Init.Period = 99;
   htim4.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim4.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim4) != HAL_OK)
@@ -450,7 +546,7 @@ static void MX_TIM10_Init(void)
   htim10.Instance = TIM10;
   htim10.Init.Prescaler = 9999;
   htim10.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim10.Init.Period = 8399;
+  htim10.Init.Period = 2499;
   htim10.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim10.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim10) != HAL_OK)
@@ -460,6 +556,37 @@ static void MX_TIM10_Init(void)
   /* USER CODE BEGIN TIM10_Init 2 */
 
   /* USER CODE END TIM10_Init 2 */
+
+}
+
+/**
+  * @brief TIM11 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM11_Init(void)
+{
+
+  /* USER CODE BEGIN TIM11_Init 0 */
+
+  /* USER CODE END TIM11_Init 0 */
+
+  /* USER CODE BEGIN TIM11_Init 1 */
+
+  /* USER CODE END TIM11_Init 1 */
+  htim11.Instance = TIM11;
+  htim11.Init.Prescaler = 249;
+  htim11.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim11.Init.Period = 99;
+  htim11.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim11.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim11) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM11_Init 2 */
+
+  /* USER CODE END TIM11_Init 2 */
 
 }
 
@@ -489,6 +616,7 @@ static void MX_GPIO_Init(void)
   GPIO_InitTypeDef GPIO_InitStruct = {0};
 
   /* GPIO Ports Clock Enable */
+  __HAL_RCC_GPIOH_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOE_CLK_ENABLE();
   __HAL_RCC_GPIOD_CLK_ENABLE();
