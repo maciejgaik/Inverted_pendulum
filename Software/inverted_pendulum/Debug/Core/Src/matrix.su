@@ -1,0 +1,10 @@
+matrix.c:3:6:matrix_2x2_mul_2x1	24	static
+matrix.c:9:6:matrix_2x1_mul_1x1	24	static
+matrix.c:15:6:matrix_2x1_add_2x1	24	static
+matrix.c:21:6:matrix_2x2_mul_2x2	24	static
+matrix.c:29:6:matrix_2x2_add_2x2	24	static
+matrix.c:37:6:matrix_1x2_mul_2x1	24	static
+matrix.c:42:6:matrix_1x2_mul_2x2	24	static
+matrix.c:48:6:matrix_2x1_mul_1x2	24	static
+matrix.c:56:6:matrix_2x2_sub_2x2	24	static
+matrix.c:64:6:matrix_2x2_trans	16	static

@@ -36,6 +36,7 @@ int32_t pid_calc(cpid_t *pid, int32_t mv, int32_t dv) {
 
 //WYLICZANIE BLEDU
 	e = dv - mv;
+	if(e > -3 && e < 3) return 0;
 
 //CZLON PROPORCJONALNY
 	p = pid->p * e;
