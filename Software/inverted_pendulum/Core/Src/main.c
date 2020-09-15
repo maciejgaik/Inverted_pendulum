@@ -207,27 +207,27 @@ void motor_go(){
 		motor_stop();
 }
 
-int16_t alfa_beta(){
-	float new_x = pendulum_pulse_count;
-	static float x_1 = 0.f;
-	static float v_1 = 0.f;
-	float x = 0.f;
-	float v = 0.f;
-	float a = 0.5;
-	float b = 0.5;
-	float dt = 0.01;
-	float dx = 0.f;
-
-	x = x_1 + v_1*dt;
-	v = v_1;
-	dx = new_x - x;
-	x += dx * a;
-	v += b * dx / dt;
-	x_1 = x;
-	v_1 = v;
-
-	return x;
-}
+//int16_t alfa_beta(){
+//	float new_x = pendulum_pulse_count;
+//	static float x_1 = 0.f;
+//	static float v_1 = 0.f;
+//	float x = 0.f;
+//	float v = 0.f;
+//	float a = 0.00005;
+//	float b = 0.000001;
+//	float dt = 0.01;
+//	float dx = 0.f;
+//
+//	x = x_1 + v_1*dt;
+//	v = v_1;
+//	dx = new_x - x;
+//	x += dx * a;
+//	v += b * dx / dt;
+//	x_1 = x;
+//	v_1 = v;
+//
+//	return x;
+//}
 
 /* USER CODE END PFP */
 
@@ -293,7 +293,12 @@ int main(void)
 	motor_pid.total_max = 100;
 	motor_pid.total_min = -100;
 
+<<<<<<< HEAD
 	pid_init(&pendulum_pid, 70.f, 0.f, 0.f, 10);
+=======
+	//float a = 1.0;
+	pid_init(&pendulum_pid, 40.f, 2.f, 30.f, 100);
+>>>>>>> d55e907f1d5c87405c75caa268ee7dab4d8410c8
 	pendulum_pid.p_max = 4095;
 	pendulum_pid.p_min = -4095;
 	pendulum_pid.i_max = 4095;
@@ -331,10 +336,11 @@ int main(void)
 		  HAL_GPIO_TogglePin(LED_B_GPIO_Port, LED_B_Pin);
 		  LED_FLAG = 0;
 	  }
-	  if(FLAG_READY){
-		  if(PID_FLAG){
-			  filter = alfa_beta();
+	  if(PID_FLAG){
+		  //filter = alfa_beta();
+		  if(FLAG_READY){
 			  pendulum_pid_controll = -pid_calc(&pendulum_pid, pendulum_pulse_count, 400);
+			  //HAL_Delay(5);
 			  motor_speed(pendulum_pid_controll);
 		  }
 //		  if(390<cart_position && 410>cart_position)
@@ -609,7 +615,7 @@ static void MX_TIM11_Init(void)
   htim11.Instance = TIM11;
   htim11.Init.Prescaler = 4999;
   htim11.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim11.Init.Period = 99;
+  htim11.Init.Period = 999;
   htim11.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim11.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim11) != HAL_OK)
