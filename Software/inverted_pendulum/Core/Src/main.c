@@ -116,42 +116,50 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 void motor_speed(int16_t speed){
 	if(speed < 0){
 		if(cart_position > 5){
-			HAL_GPIO_WritePin(MOTOR_IN1_GPIO_Port, MOTOR_IN1_Pin, GPIO_PIN_RESET);
-			HAL_GPIO_WritePin(MOTOR_IN2_GPIO_Port, MOTOR_IN2_Pin, GPIO_PIN_SET);
+			//HAL_GPIO_WritePin(MOTOR_IN1_GPIO_Port, MOTOR_IN1_Pin, GPIO_PIN_RESET);
+			//HAL_GPIO_WritePin(MOTOR_IN2_GPIO_Port, MOTOR_IN2_Pin, GPIO_PIN_SET);
 			if(cart_position > 20){
-				motor_pwm_duty=-speed;
+				motor_pwm_duty=ramp(-speed);
 			}
 			else{
 				motor_pwm_duty=45;
 			}
 		}
 		else{
-			HAL_GPIO_WritePin(MOTOR_IN1_GPIO_Port, MOTOR_IN1_Pin, GPIO_PIN_RESET);
-			HAL_GPIO_WritePin(MOTOR_IN2_GPIO_Port, MOTOR_IN2_Pin, GPIO_PIN_RESET);
+			//HAL_GPIO_WritePin(MOTOR_IN1_GPIO_Port, MOTOR_IN1_Pin, GPIO_PIN_RESET);
+			//HAL_GPIO_WritePin(MOTOR_IN2_GPIO_Port, MOTOR_IN2_Pin, GPIO_PIN_RESET);
 			motor_pwm_duty = 100;
 		}
 	}
 	else if(speed > 0){
 		if(cart_position < 428){
-			HAL_GPIO_WritePin(MOTOR_IN1_GPIO_Port, MOTOR_IN1_Pin, GPIO_PIN_SET);
-			HAL_GPIO_WritePin(MOTOR_IN2_GPIO_Port, MOTOR_IN2_Pin, GPIO_PIN_RESET);
+			//HAL_GPIO_WritePin(MOTOR_IN1_GPIO_Port, MOTOR_IN1_Pin, GPIO_PIN_SET);
+			//HAL_GPIO_WritePin(MOTOR_IN2_GPIO_Port, MOTOR_IN2_Pin, GPIO_PIN_RESET);
 			if(cart_position < 413){
-				motor_pwm_duty=speed;
+				motor_pwm_duty=ramp(speed);
 			}
 			else{
 				motor_pwm_duty=45;
 			}
 		}
 		else{
-			HAL_GPIO_WritePin(MOTOR_IN1_GPIO_Port, MOTOR_IN1_Pin, GPIO_PIN_RESET);
-			HAL_GPIO_WritePin(MOTOR_IN2_GPIO_Port, MOTOR_IN2_Pin, GPIO_PIN_RESET);
+			//HAL_GPIO_WritePin(MOTOR_IN1_GPIO_Port, MOTOR_IN1_Pin, GPIO_PIN_RESET);
+			//HAL_GPIO_WritePin(MOTOR_IN2_GPIO_Port, MOTOR_IN2_Pin, GPIO_PIN_RESET);
 			motor_pwm_duty = 100;
 		}
 	}
 	else{
-		HAL_GPIO_WritePin(MOTOR_IN1_GPIO_Port, MOTOR_IN1_Pin, GPIO_PIN_SET);
-		HAL_GPIO_WritePin(MOTOR_IN2_GPIO_Port, MOTOR_IN2_Pin, GPIO_PIN_SET);
+		//HAL_GPIO_WritePin(MOTOR_IN1_GPIO_Port, MOTOR_IN1_Pin, GPIO_PIN_SET);
+		//HAL_GPIO_WritePin(MOTOR_IN2_GPIO_Port, MOTOR_IN2_Pin, GPIO_PIN_SET);
 		motor_pwm_duty = 0;
+	}
+}
+
+uint16_t ramp(uint16_t dest){
+	if(dest == motor_pwm_duty) return motor_pwm_duty;
+	else{
+		if(dest > motor_pwm_duty) return motor_pwm_duty+1;
+		else return motor_pwm_duty-1;
 	}
 }
 
@@ -285,7 +293,7 @@ int main(void)
 	motor_pid.total_max = 100;
 	motor_pid.total_min = -100;
 
-	pid_init(&pendulum_pid, 20.f, 10.f, 10.f, 10);
+	pid_init(&pendulum_pid, 70.f, 0.f, 0.f, 10);
 	pendulum_pid.p_max = 4095;
 	pendulum_pid.p_min = -4095;
 	pendulum_pid.i_max = 4095;
