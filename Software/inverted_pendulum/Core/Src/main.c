@@ -50,6 +50,7 @@ TIM_HandleTypeDef htim3;
 TIM_HandleTypeDef htim4;
 TIM_HandleTypeDef htim10;
 TIM_HandleTypeDef htim11;
+TIM_HandleTypeDef htim13;
 DMA_HandleTypeDef hdma_tim4_ch1;
 
 /* USER CODE BEGIN PV */
@@ -70,11 +71,13 @@ uint8_t LED_FLAG = 0;
 uint8_t MOTOR_FLAG = 0;
 uint8_t FLAG_READY = 0;
 uint8_t PID_FLAG = 0;
+uint8_t PWM_FLAG = 0;
+
 
 cpid_t motor_pid;
 cpid_t pendulum_pid;
 
-int16_t maxpid = 0;
+int16_t prev_speed = 0;
 
 volatile int16_t motor_pid_controll = 0;
 volatile int16_t pendulum_pid_controll = 0;
@@ -92,6 +95,7 @@ static void MX_TIM1_Init(void);
 static void MX_TIM3_Init(void);
 static void MX_TIM10_Init(void);
 static void MX_TIM11_Init(void);
+static void MX_TIM13_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* Interrupts */
@@ -108,60 +112,69 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 	if(htim==&htim10){
 		LED_FLAG = 1;
 	}
-	if(htim==&htim11){
+	else if(htim==&htim11){
 		PID_FLAG = 1;
+	}
+	else if(htim==&htim13){
+		PWM_FLAG = 1;
+	}
+}
+
+uint16_t ramp(uint16_t dest){
+	if(dest/10 == motor_pwm_duty/10) return motor_pwm_duty;
+	else{
+		if(dest > motor_pwm_duty) return motor_pwm_duty+10;
+		else return motor_pwm_duty-10;
 	}
 }
 
 void motor_speed(int16_t speed){
 	if(speed < 0){
 		if(cart_position > 5){
-			//HAL_GPIO_WritePin(MOTOR_IN1_GPIO_Port, MOTOR_IN1_Pin, GPIO_PIN_RESET);
-			//HAL_GPIO_WritePin(MOTOR_IN2_GPIO_Port, MOTOR_IN2_Pin, GPIO_PIN_SET);
 			if(cart_position > 20){
+				HAL_GPIO_WritePin(MOTOR_IN1_GPIO_Port, MOTOR_IN1_Pin, GPIO_PIN_RESET);
+				HAL_GPIO_WritePin(MOTOR_IN2_GPIO_Port, MOTOR_IN2_Pin, GPIO_PIN_SET);
 				motor_pwm_duty=ramp(-speed);
 			}
 			else{
-				motor_pwm_duty=45;
+				HAL_GPIO_WritePin(MOTOR_IN1_GPIO_Port, MOTOR_IN1_Pin, GPIO_PIN_SET);
+				HAL_GPIO_WritePin(MOTOR_IN2_GPIO_Port, MOTOR_IN2_Pin, GPIO_PIN_SET);
+				motor_pwm_duty=100;
 			}
 		}
 		else{
-			//HAL_GPIO_WritePin(MOTOR_IN1_GPIO_Port, MOTOR_IN1_Pin, GPIO_PIN_RESET);
-			//HAL_GPIO_WritePin(MOTOR_IN2_GPIO_Port, MOTOR_IN2_Pin, GPIO_PIN_RESET);
+			HAL_GPIO_WritePin(MOTOR_IN1_GPIO_Port, MOTOR_IN1_Pin, GPIO_PIN_RESET);
+			HAL_GPIO_WritePin(MOTOR_IN2_GPIO_Port, MOTOR_IN2_Pin, GPIO_PIN_RESET);
 			motor_pwm_duty = 100;
 		}
 	}
 	else if(speed > 0){
 		if(cart_position < 428){
-			//HAL_GPIO_WritePin(MOTOR_IN1_GPIO_Port, MOTOR_IN1_Pin, GPIO_PIN_SET);
-			//HAL_GPIO_WritePin(MOTOR_IN2_GPIO_Port, MOTOR_IN2_Pin, GPIO_PIN_RESET);
 			if(cart_position < 413){
+				HAL_GPIO_WritePin(MOTOR_IN1_GPIO_Port, MOTOR_IN1_Pin, GPIO_PIN_SET);
+				HAL_GPIO_WritePin(MOTOR_IN2_GPIO_Port, MOTOR_IN2_Pin, GPIO_PIN_RESET);
 				motor_pwm_duty=ramp(speed);
 			}
 			else{
-				motor_pwm_duty=45;
+				HAL_GPIO_WritePin(MOTOR_IN1_GPIO_Port, MOTOR_IN1_Pin, GPIO_PIN_SET);
+				HAL_GPIO_WritePin(MOTOR_IN2_GPIO_Port, MOTOR_IN2_Pin, GPIO_PIN_SET);
+				motor_pwm_duty=100;
 			}
 		}
 		else{
-			//HAL_GPIO_WritePin(MOTOR_IN1_GPIO_Port, MOTOR_IN1_Pin, GPIO_PIN_RESET);
-			//HAL_GPIO_WritePin(MOTOR_IN2_GPIO_Port, MOTOR_IN2_Pin, GPIO_PIN_RESET);
+			HAL_GPIO_WritePin(MOTOR_IN1_GPIO_Port, MOTOR_IN1_Pin, GPIO_PIN_RESET);
+			HAL_GPIO_WritePin(MOTOR_IN2_GPIO_Port, MOTOR_IN2_Pin, GPIO_PIN_RESET);
 			motor_pwm_duty = 100;
 		}
 	}
 	else{
-		//HAL_GPIO_WritePin(MOTOR_IN1_GPIO_Port, MOTOR_IN1_Pin, GPIO_PIN_SET);
-		//HAL_GPIO_WritePin(MOTOR_IN2_GPIO_Port, MOTOR_IN2_Pin, GPIO_PIN_SET);
+		HAL_GPIO_WritePin(MOTOR_IN1_GPIO_Port, MOTOR_IN1_Pin, GPIO_PIN_SET);
+		HAL_GPIO_WritePin(MOTOR_IN2_GPIO_Port, MOTOR_IN2_Pin, GPIO_PIN_SET);
 		motor_pwm_duty = 0;
 	}
 }
 
-uint16_t ramp(uint16_t dest){
-	if(dest == motor_pwm_duty) return motor_pwm_duty;
-	else{
-		if(dest > motor_pwm_duty) return motor_pwm_duty+1;
-		else return motor_pwm_duty-1;
-	}
-}
+
 
 //void motor_speed(int16_t speed){
 //	if(speed < 0){
@@ -183,7 +196,7 @@ uint16_t ramp(uint16_t dest){
 void motor_stop(){
 	HAL_GPIO_WritePin(MOTOR_IN1_GPIO_Port, MOTOR_IN1_Pin, GPIO_PIN_RESET);
 	HAL_GPIO_WritePin(MOTOR_IN2_GPIO_Port, MOTOR_IN2_Pin, GPIO_PIN_RESET);
-	motor_pwm_duty=100;
+	motor_pwm_duty=0;
 }
 
 void motor_init(){
@@ -270,6 +283,7 @@ int main(void)
   MX_TIM3_Init();
   MX_TIM10_Init();
   MX_TIM11_Init();
+  MX_TIM13_Init();
   /* USER CODE BEGIN 2 */
 
   HAL_TIM_Encoder_Start(&htim1, TIM_CHANNEL_ALL);
@@ -277,6 +291,7 @@ int main(void)
 
   HAL_TIM_Base_Start_IT(&htim10);
   HAL_TIM_Base_Start_IT(&htim11);
+  HAL_TIM_Base_Start_IT(&htim13);
 
   HAL_TIM_PWM_Start_DMA(&htim4, TIM_CHANNEL_1, &motor_pwm_duty, 1);
 
@@ -293,12 +308,8 @@ int main(void)
 	motor_pid.total_max = 100;
 	motor_pid.total_min = -100;
 
-<<<<<<< HEAD
-	pid_init(&pendulum_pid, 70.f, 0.f, 0.f, 10);
-=======
-	//float a = 1.0;
-	pid_init(&pendulum_pid, 40.f, 2.f, 30.f, 100);
->>>>>>> d55e907f1d5c87405c75caa268ee7dab4d8410c8
+
+	pid_init(&pendulum_pid, 40.f, 0.f, 0.f, 1);
 	pendulum_pid.p_max = 4095;
 	pendulum_pid.p_min = -4095;
 	pendulum_pid.i_max = 4095;
@@ -336,12 +347,15 @@ int main(void)
 		  HAL_GPIO_TogglePin(LED_B_GPIO_Port, LED_B_Pin);
 		  LED_FLAG = 0;
 	  }
-	  if(PID_FLAG){
-		  //filter = alfa_beta();
-		  if(FLAG_READY){
-			  pendulum_pid_controll = -pid_calc(&pendulum_pid, pendulum_pulse_count, 400);
-			  //HAL_Delay(5);
+	  if(FLAG_READY && pendulum_pulse_count > 760 && pendulum_pulse_count < 840){
+		  if(PWM_FLAG){
+			  PWM_FLAG=0;
 			  motor_speed(pendulum_pid_controll);
+		  }
+
+		  if(PID_FLAG){
+			  pendulum_pid_controll = -pid_calc(&pendulum_pid, pendulum_pulse_count, 800);
+			  //HAL_Delay(5);
 		  }
 //		  if(390<cart_position && 410>cart_position)
 //			  cart_dest=10;
@@ -482,7 +496,7 @@ static void MX_TIM3_Init(void)
   htim3.Init.Period = 65535;
   htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
-  sConfig.EncoderMode = TIM_ENCODERMODE_TI1;
+  sConfig.EncoderMode = TIM_ENCODERMODE_TI12;
   sConfig.IC1Polarity = TIM_ICPOLARITY_RISING;
   sConfig.IC1Selection = TIM_ICSELECTION_DIRECTTI;
   sConfig.IC1Prescaler = TIM_ICPSC_DIV1;
@@ -613,7 +627,7 @@ static void MX_TIM11_Init(void)
 
   /* USER CODE END TIM11_Init 1 */
   htim11.Instance = TIM11;
-  htim11.Init.Prescaler = 4999;
+  htim11.Init.Prescaler = 499;
   htim11.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim11.Init.Period = 999;
   htim11.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
@@ -625,6 +639,37 @@ static void MX_TIM11_Init(void)
   /* USER CODE BEGIN TIM11_Init 2 */
 
   /* USER CODE END TIM11_Init 2 */
+
+}
+
+/**
+  * @brief TIM13 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM13_Init(void)
+{
+
+  /* USER CODE BEGIN TIM13_Init 0 */
+
+  /* USER CODE END TIM13_Init 0 */
+
+  /* USER CODE BEGIN TIM13_Init 1 */
+
+  /* USER CODE END TIM13_Init 1 */
+  htim13.Instance = TIM13;
+  htim13.Init.Prescaler = 499;
+  htim13.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim13.Init.Period = 99;
+  htim13.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim13.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim13) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM13_Init 2 */
+
+  /* USER CODE END TIM13_Init 2 */
 
 }
 
