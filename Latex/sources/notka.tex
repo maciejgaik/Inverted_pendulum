@@ -1,0 +1,113 @@
+%\newpage
+%\thispagestyle{empty}
+%\cleardoublepage
+%\thispagestyle{plain}
+
+\mbox{}\vfill\hfill
+\begin{minipage}{0.5\linewidth} 
+  {\tiny \noindent Do składu pracy wykorzystano system przygotowania
+    dokumentów~\LaTeX, opracowany przez
+    L.~Lamporta\index{latex>\LaTeX} [Lam94], będący nakładką
+    systemu \TeX, [Knu86a,Knu86b].  Matematyczne czcionki o nazwie
+    {AMS Euler}, których używamy w tej pracy, zostały przygotowane
+    przez H.\ Zapfa [KZ86], przy współpracy z~D.\ Knuthem i~jego
+    studentami, na zlecenie Amerykańskiego Towarzystwa Matematycznego.
+    %% Przy wybranej Antykwie Toruńskiej/Półtawskiego odznacz odpowiednio poniższe
+    Wybrane czcionki składu tekstu, Antykwa Toruńska [Now97] -- jeden
+    %Wybrane czcionki składu tekstu, Antykwa Półtawskiego [Now99] -- jeden
+    z~nielicznych krojów pisma zaprojektowany specjalnie dla języka
+    polskiego w~sposób uwzględniający jego rytm -- w~odczuciu autora
+    doskonale współgrają z~kształtem czcionki {AMS Euler}, pozwalając
+    na uzyskanie harmonijnej całości.
+    % %% Przy wybranych czcionkach Concrete odznacz poniższe
+    % Czcionki składu tekstu, zwane {Concrete Roman} i {Concrete
+    %   Italic}, należące do knuthowskiej rodziny czcionek {Computer
+    %   Modern}, zostały specjalnie przystosowane do kształtu czcionki
+    % {AMS Euler} na potrzeby książki [GKP96].
+    % %% Przy wybranych czcionkach URW Palladio odznacz poniższe
+    % Czcionka składu tekstu, zwana URW Palladio jest klonem zapfoskiej rodziny
+    % czcionek o~nazwie Palatino [LPn05] i~zdaniem autora świetnie współgra
+    % z~kształtem czcionki {AMS Euler}.
+    Składu bezszeryfowego tekstu maszynowego dokonano z~użyciem
+    opracowanej przez R. Leviena czcionki o~nazwie Inconsolata
+    [Lev15]\footnote{\red\tiny Chyba warto takie informacje szerzyć}.
+
+
+\vspace{-4mm}
+
+ \makeatletter
+\renewenvironment{thebibliography}[1]
+     {%
+        \tiny%
+      \list{\@biblabel{\@arabic\c@enumiv}}%
+           {\settowidth\labelwidth{\@biblabel{#1}}%
+\setlength{\itemsep}{2.5mm}
+            \leftmargin\labelwidth
+            \advance\leftmargin\labelsep
+            \@openbib@code
+            \usecounter{enumiv}%
+            \let\p@enumiv\@empty
+            \renewcommand\theenumiv{\@arabic\c@enumiv}}%
+      \sloppy\clubpenalty4000\widowpenalty4000%
+      \sfcode`\.\@m\vspace{5mm}}
+     {\def\@noitemerr
+       {\@latex@warning{Empty `thebibliography' environment}}%
+      \endlist}
+
+\makeatother
+
+\begin{thebibliography}{Knu86b}
+
+% %% Odmarkować pozycję gdy wybrane czcionki Concrete
+% \bibitem[GKP96]{GKP96loc}
+% R.~L. Graham, D.~E. Knuth i O.~Patashnik,
+% \newblock { Matematyka konkretna}.
+% \newblock PWN, Warszawa, 1996.\vspace{-3mm}
+
+\bibitem[Knu86a]{Knuth86loc}
+D.~E. Knuth,
+\newblock { The \TeX book, volume {A} of Computers and Typesetting}.
+\newblock Addison-Wesley, Reading, 1986.\vspace{-3mm}
+
+\bibitem[Knu86b]{Knuth86aloc}
+D.~E. Knuth,
+\newblock { \TeX: {The} Program, volume {B} of Computers and Typesetting}.
+\newblock Addison-Wesley, Reading, 1986.\vspace{-3mm}
+
+\bibitem[KZ86]{KnZa89loc}
+D.~E. Knuth i H.~Zapf,
+\newblock {AMS} {Euler} --- {A} new typeface for mathematics.
+\newblock { Scholary Publishing}, {20}:131--157, 1986.\vspace{-3mm}
+
+\bibitem[Lam94]{Lamport94loc}
+L.~Lamport,
+\newblock { \LaTeX: A Document Preparation System}.
+\newblock Addison-\mbox{-Wesley}, Reading, 1994.\vspace{-3mm}
+
+\bibitem[Lev15]{Levien15loc}
+R.~Levien,
+\newblock {Inconsolata}.
+\newblock \url{https://levien.com/type/myfonts/inconsolata.html}, 2015.\vspace{-3mm}
+
+% %% Odmarkować pozycję przy wybranej czcionce URW Palladio
+% \bibitem[LPn05]{LinotypePalatino05loc}
+% Linotype Palatino nova: A classical typeface redesigned by Hermann Zapf,
+% \newblock Linotype Library GmbH, 2005.\vspace{-2mm}
+
+%% Odmarkować pozycję przy wybranej Antykwie Toruńskiej
+\bibitem[Now97]{nowacki97loc}
+J.~Nowacki,
+\newblock {Antykwa} {Toruńska} -– od początku do końca polska czcionka.
+\newblock {\em Biuletyn Polskiej Grupy Użytkowników Systemu \TeX}, 9:26--27,
+  \nolinebreak1997.\vspace{-2mm}
+
+% %% Odmarkować pozycję przy wybranej Antykwie Półtawskiego
+% \bibitem[Now99]{nowacki99}
+% J.~Nowacki,
+% \newblock Piórkiem i {MetaPost-em}, czyli {Antykwa} {Półtawskiego}.
+% \newblock {\em Biuletyn Polskiej Grupy Użytkowników Systemu \TeX}, 12:49--53,
+%   \nolinebreak1999.\vspace{-2mm}
+
+\end{thebibliography}
+}
+\end{minipage}

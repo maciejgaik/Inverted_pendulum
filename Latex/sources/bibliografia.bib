@@ -1,0 +1,45 @@
+% Do dodawania kluczy do odmiennego sortowania niż według autora
+% (bibtex nie radzi sobie z sortowaniem polskich znaków diakrytycznych)
+@PREAMBLE{ {\providecommand{\noopsort}[1]{}} }
+
+% Przykłady formatowania książek i artykułów w czasopismach
+% Dostępne są jeszcze rozdziały w książkach (InBook),
+% referaty konferencyjne (InProceedings), raporty (TechReport),
+% prace nieopublikowane (Unpublished)
+@book{Arn81,
+    author      = "W. I. Arnold",
+    title       = "Metody matematyczne mechaniki klasycznej",
+    publisher   = "Państwowe Wydawnictwo Naukowe",
+    year        =  1981
+},
+
+@book{TchMu18,
+    author      = "K. Tchoń and R. Muszyński",
+    title       = "Mechanika analityczna. Notatki do wykładów z~dziedziny automatyki i robotyki",
+    publisher   = "Katedra Cybernetyki i Robotyki, Wydział Elektroniki, Politechnika Wrocławska",
+    year        =  2018
+},
+
+% Przykłady formatowania prac dyplomowych
+@mastersthesis{goral,
+author = "D. Góral",
+title = "Konstrukcja robota mobilnego napędzanego dwiema półsferami",
+year = "2017",
+school = "Wydział Mechaniczny, Politechnika Wrocławska",
+type = "Praca dyplomowa inżynierska"
+}
+
+
+% Przykłady formatowania odnośników do oprogramowania
+@misc{matlab,
+author = "MathWorks",
+title = "MATLAB",
+howpublished = {\url{https://www.mathworks.com/products/matlab.html}} 
+}
+
+% Przykłady formatowania materiałów internetowych, w tym odwołań do Wikipedii
+@misc{przegCard,
+author = "Wikipedia",
+title = "Przegub {Cardana}",
+howpublished = {\url{https://pl.wikipedia.org/wiki/Przegub_Cardana}}
+}

@@ -1,0 +1,300 @@
+%\documentclass[printmode,oneside,eng]{mgr}  % do publikacji elektronicznej
+\documentclass[printmode,eng]{mgr}  % do wydruku dwustronnego
+%\documentclass[printmode,eng,draft]{mgr}  % do wydruku dwustronnego w~wersji roboczej
+
+%----------------------| Input encoding configuration |
+
+\usepackage[utf8]{inputenc}
+
+%-------------------------| Typeface configuration |------------------------
+
+%% Najpierw (chyba) należy wybrać czcionkę tekstu, potem matematyki
+
+%% wybór czcionki Computer Concrete specjalnie zaprojektowanej do użycia 
+%% z~czcionką matematyczną euler (nie ma ona niestety wersji bold - proponuje się więc użycie bolda z kroju
+%%   Computer Modern Sans Serif)
+%\usepackage{beton}             % ZALECANA DO SKŁADU TEKSTÓW PO ANGIELSKU
+%\renewcommand{\bfdefault}{sbc} % to use Computer Modern Sans Serif demibold condensed fonts as bold 
+%% choć może komuś bardziej podobać się będzie ten krój normalnej szerokości 
+%\renewcommand{\bfdefault}{sb} % to use Computer Modern Sans Serif demibold fonts as bold 
+
+%% alternatywny wybór Antykwy Półtawskiego - czcionki zaprojektowanej
+%% specjalnie dla języka polskiego uwzględniającej jego rytm 
+%\usepackage{antpolt}
+%% alternatywny wybór Antykwy Toruńskiej - bardziej "współczesnej",
+%% całkowicie polskiej czcionki
+\usepackage{anttor}             % ZALECANA DO SKŁADU TEKSTÓW PO POLSKU
+%\usepackage[math]{anttor}      % math włącza antykwę także w~matematyce
+                                % ale chyba coś psuje :( (np. brak strzałek)
+
+%% alternatywnie wybór czcionki URW Palladio
+%\usepackage{newpxtext}  % Palatino font
+%\linespread{1.05}  % Palatino needs more leading space (between lines)
+
+%% ustawienie czcionki eulerowskiej do składu wyrażeń matematycznych
+%\usepackage[euler-digits,small]{eulervm}
+\usepackage{eulervm}
+
+%% ustawienie czcionki bezszeryfowej Monospace (typewriter, code) font (last) - skład poleceń, wydruków programów
+\usepackage[varqu,varl]{inconsolata}
+
+%-------------------------| Sprawy polskie |------------------------
+
+\usepackage[T1]{fontenc} % bez tego są złe znaki / { } w czcionce tt
+                         % ale musi być użyty pakiet polski bez opcji
+                         % wybierającej układ - gdy zamarkowane
+                         % używamy pakiet polski z~opcją wyboru układu
+\usepackage{polski}
+%\usepackage[OT4]{polski} % domyślnie?
+
+%---------------------------| Packetology |-------------------------
+
+\usepackage{geometry}           % manipulowanie geometrią łamu
+\usepackage{indentfirst}        % wcięcia akapitowe w pierwszych paragrafach rozdziałów
+\usepackage[dvipsnames]{xcolor} % by mieć nazwy kolorów w~rodzaju \green
+\usepackage{gensymb}
+%% zmiana formatowania tytulariów
+%\usepackage[raggedleft]{titlesec}
+
+\usepackage[titles]{tocloft}    % do formatowani spisów
+
+%% w razie potrzeby zmieniamy nieco odstępy przed rozdziałami i podrozdziałami w spisie
+%% treści by uniknąć pojedynczego samotnego tytułu rozdziału/podrozdziału na dole/górze strony
+%% i by ładnie się zmieściła notka o latechu
+\addtolength{\cftbeforechapskip}{-0.9ex}
+\addtolength{\cftbeforesecskip}{0.02ex}
+
+%%modyfikacja odstępów między pozycjami w~bibliografii
+\let\oldbibliography\thebibliography
+\renewcommand{\thebibliography}[1]{%
+  \oldbibliography{#1}%
+  \setlength{\itemsep}{0pt plus 0.3ex}%
+}
+
+%% ustawienie maksymalnej liczby i obszaru dla obiektów pływających (rysunków, tabel)
+\setcounter{topnumber}{3}
+\setcounter{totalnumber}{4}
+\renewcommand{\topfraction}{.8}
+
+\usepackage{graphicx}                % dołaczanie i manipulowanie grafikami
+\usepackage[export]{adjustbox}       % więcej komend operujących na "pudełkach"
+\usepackage[caption = false]{subfig} % obsługa rysunków z częściami
+
+\usepackage{svg}                % dołączanie grafik w formacie svg
+%\usepackage[inkscapepath=svgdir]{svg}  % w nowszych wersjach
+
+\usepackage{tikz}               % dołączanie grafik w formacie TikZ
+\usepackage{makecell}           % trochę tikzowej magii
+    \tikzstyle{block} = [draw, fill=blue!20, rectangle, 
+     minimum height=3em, minimum width=6em]
+    \tikzstyle{sum} = [draw, fill=blue!20, circle, node distance=3.5cm]
+    \tikzstyle{input} = [coordinate]
+    \tikzstyle{output} = [coordinate]
+    \tikzstyle{pinstyle} = [pin edge={to-,thin,black}]    
+    \usetikzlibrary{arrows,automata,calc,positioning}
+\usepackage{standalone}  
+
+\usepackage{pgfplots}           % do robienia wykresów 
+\pgfplotsset{compat=1.5}        %% why 1.5? pl. update
+
+\usepackage{mathtools}          % doskonałe pakiety rozszerzające do matematyki
+\usepackage{amssymb, amsfonts}  % mathtools zastępuje amsmath (naprawione błedy, dodane rozszerzenia) 
+\usepackage{wasysym}            % trochę więcej różnych symboli (buźki)
+%\usepackage[fleqn]{mathtools}  % równania w wersji dosuniętej w lewo
+%% automatyczne numerowanie jedynie tych równań, do których są odwołania w~tekście
+%\mathtoolsset{showonlyrefs=true}
+
+%% symbole do oznaczania stopek w~miejsce liczb
+\renewcommand{\thefootnote}{\fnsymbol{footnote}}
+%% powtórzone z latex.ltx - w przeciwnym razie znika symbol \textbardbl przy
+%% wybranej Antykwie Toruńskiej (sprawdzić co z innymi definicjami z omsenc.def,
+%% sprawdzić czy też przy innych czcionkach)
+\DeclareTextSymbolDefault{\textbardbl}{OMS}
+%% automatyczne resetowanie wartości licznika stopek użyteczne przy użyciu symboli
+%% do oznaczania stopek w~miejsce liczb (liczba dostępnych symboli wynosi tylko 9)
+\usepackage{etoolbox,pdftexcmds}
+\makeatletter
+\patchcmd{\footnote}
+  {\stepcounter\@mpfn}
+%  {\stepcounter\@mpfn\check@overflow\@mpfn} %%było w~przykładzie
+  {\stepcounter\@mpfn\check@overflow}
+  {}{}
+\newcommand{\check@overflow}{%
+  \ifnum\pdf@strcmp{\@mpfn}{footnote}=\z@
+    \ifnum\value{footnote}>8  %tu było 9, ale czasami nie resetowało poprawnie
+      \setcounter{footnote}{1}%
+    \fi
+  \fi
+}
+\makeatother
+
+\usepackage{hyperref}           % obsługa aktywnych odnośników i hypertekstu
+\usepackage{url}                % obsługa adresów url
+
+%% pakiet minted do wydruków programów
+%% 'minted' gives much better highlight then the default listings,
+%% but it reqires Python with Pygments (check the documentation of minted)
+%% it also requires passing '-shell-escape' option to pdflatex during compilation
+\usepackage[%
+  cache=false,
+  chapter,
+  %    outputdir=build,  % if building in separate directory, this must be included
+                         % ale nie zawsze działa poprawnie :( 
+    newfloat  % required if multi-page floating listings are needed (see below)
+]{minted}  % (note: from my experience must be loaded before 'csquotes')
+%% by wybrać inny styl - lista dostępnych styli: pygmentize -L styles
+%\usemintedstyle{igor}
+\SetupFloatingEnvironment{listing}{name=Wydruk}
+%% kolor tła używany w~wydrukach
+\definecolor{OurListingBackground}{rgb}{0.95,0.95,0.95}
+%% fix the minted@colorbg environment bug
+\makeatletter
+\renewenvironment{minted@colorbg}[1]
+ {\def\minted@bgcol{#1}%
+  \noindent
+  \begin{lrbox}{\minted@bgbox}
+  \begin{minipage}{\linewidth-2\fboxsep}}
+ {\end{minipage}%
+  \end{lrbox}%
+  \setlength{\topsep}{\bigskipamount}% set the vertical space
+  \trivlist\item\relax % ensure going to a new line
+  \colorbox{\minted@bgcol}{\usebox{\minted@bgbox}}%
+  \endtrivlist % close the trivlist
+ }
+\makeatother
+
+%%pakiet do robienia notatek w trakcie pracy
+\usepackage{todonotes}
+\makeatletter   %spolszczenie
+\renewcommand{\@todonotes@todolistname}{Do zrobienia}
+\renewcommand{\@todonotes@MissingFigureText}{Rysunek}
+\renewcommand{\@todonotes@MissingFigureUp}{Brakujący}
+\renewcommand{\@todonotes@MissingFigureDown}{rysunek}
+\makeatother
+
+%% dodaje w pliku wynikowym klucze etykiet i referencji - wygodne przy pracy nad tekstem
+%\usepackage{showkeys}
+
+%%inne przydatne
+%\usepackage{fancyhdr}
+%\usepackage{fancyvrb}
+%\usepackage{lipsum}  
+%\usepackage{listings}
+
+%-----------------------| End of packetology |----------------------
+
+%---------------------------| Tytularia |---------------------------
+
+% Zmień dane stosownie do tytułu i autora pracy tutaj
+% ALE TEŻ I W POLECENIU \pdftitle NIECO PONIŻEJ! (Hyper data general configuration)
+\author{Maciej Gaik}
+\title{Projekt budowy odwróconego wahadła matematycznego}
+\engtitle{Design and construction reversed pendulum}
+\supervisor{Dr inż. Mateusz Cholewiński,\\ Katedra Cybernetyki i~Robotyki}
+\field{Automatyka i~Robotyka (AIR)}
+\specialisation{Robotyka (ARR)}
+\date{2020}
+
+%-------------------------| Hyper data general configuration |------------------------
+
+\hypersetup{unicode,
+   pdfpagemode=UseOutlines,   % otwiera dokument w trybie jednej strony
+   pdfpagelayout=SinglePage,  %
+   pdfstartpage=1,            % na podanej stronie
+   bookmarksopen=true,        % rozwinięcie zakładek
+   bookmarksopenlevel=1,      % do jakiego poziomu
+   colorlinks=true,      % kolorowanie odnośników zamiast ramki wokół nich
+   citecolor=cyan,       % kolor odnośników do bibliografii, domyślnie zielony
+   filecolor=red,        % kolor odnośników do lokalnych plików, domyśnie magenta
+   linkcolor=blue,       % kolor odnośników wewnętrznych, domyślnie czerwony
+   menucolor=green,      % kolor pozycji menu Acrobata, domyślnie czerwony
+   urlcolor=blue,        % kolor odnośników do adresów internetowych, domyślnie cyan
+                              % DANE DOKUMENTACJI
+   pdftitle={Bąk jaki jest każdy widzi. Studium zachowań - Przykład
+    i~wytyczne formatowania pracy dyplomowej},
+   pdfauthor={Roberto Orozco, Robert Muszyński},
+   pdfsubject={Praca dyplomowa inżynierska - przykład i~wytyczne},
+   pdfkeywords={bąk, Lagrange top, Euler top, praca dyplomowa, formatowanie, wytyczne}
+}
+
+%-------------------------| Geometria strony |-----------------------------
+
+\geometry{
+    top = 25mm,
+    headheight = 15mm,
+    headsep = 3mm,
+    textheight = 24cm,
+    textwidth = 16cm,
+}
+
+%---------------------| Frequently used commands definitions |-------------------
+
+\newcommand{\red}{\color{red}}
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
+    T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+
+\newtheorem{uwaga}{Uwaga}
+\newtheorem{twr}{Twierdzenie}
+%------------------------------------| END |-------------------------------------
+
+%----------------------------| Math symbols definition |-------------------------
+
+\newcommand{\angmom}{\boldsymbol{m}}
+\newcommand{\bdvelo}{\boldsymbol{\omega}_B}
+\newcommand{\grav}{\boldsymbol{g}}
+\newcommand{\lagran}{L(\boldsymbol{q},\boldsymbol{\dot{q}})}
+\newcommand{\COMvec}{\boldsymbol{r}_B}
+\newcommand{\ee}{\boldsymbol{e}}
+\newcommand{\FF}{\boldsymbol{F}}
+\newcommand{\xx}{\boldsymbol{x}}
+\newcommand{\qq}{\boldsymbol{q}}
+\newcommand{\RR}{\boldsymbol{R}}
+\newcommand{\TT}{\boldsymbol{T}}
+\newcommand{\pp}{\boldsymbol{p}}
+\newcommand{\iner}{\boldsymbol{I}_B}
+\newcommand{\vv}{\boldsymbol{v}}
+\newcommand{\bbs}{\boldsymbol}
+\DeclareMathOperator{\const}{const}
+\DeclareMathOperator*{\rank}{rank} 
+
+\graphicspath{{figures/chapter_01/}{figures/chapter_02/}{figures/chapter_03/}{figures/chapter_04/}}
+
+
+\begin{document}
+
+\pdfbookmark{Strona tytułowa}{tytul}
+\maketitle
+%% informacja o sposobie udostępniania tego dokumentu
+\input{sources/copyleft.tex}
+
+\cleardoublepage
+\pdfbookmark{\contentsname}{Contents}
+\tableofcontents            %spis treści
+\markboth{\contentsname}{\contentsname}
+%\input{sources/notka}       %notka o systemie składu i czcionkach
+%\input{sources/font-note}   %przykładowa wersja angielska notki
+
+%% część właściwa dokumentu
+\include{sources/00_Wstep}
+\include{sources/01_wprowadzenie_matematyczne}
+\include{sources/02_konstrukcja}
+\include{sources/50_zakonczenie}
+
+\cleardoublepage
+\phantomsection
+\addcontentsline{toc}{chapter}{\bibname}
+\bibliographystyle{alphapl}
+\bibliography{sources/bibliografia}
+\markboth{\bibname}{\bibname}
+
+%%spis rysunków
+\cleardoublepage
+\phantomsection
+\addcontentsline{toc}{chapter}{\listfigurename}
+\listoffigures
+\markboth{\listfigurename}{\listfigurename}
+
+\appendix
+\include{sources/90_dodatek_a}
+
+\end{document}
