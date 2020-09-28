@@ -4,6 +4,7 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
+../Core/Src/dwt_delay.c \
 ../Core/Src/filter.c \
 ../Core/Src/main.c \
 ../Core/Src/matrix.c \
@@ -15,6 +16,7 @@ C_SRCS += \
 ../Core/Src/system_stm32f4xx.c 
 
 OBJS += \
+./Core/Src/dwt_delay.o \
 ./Core/Src/filter.o \
 ./Core/Src/main.o \
 ./Core/Src/matrix.o \
@@ -26,6 +28,7 @@ OBJS += \
 ./Core/Src/system_stm32f4xx.o 
 
 C_DEPS += \
+./Core/Src/dwt_delay.d \
 ./Core/Src/filter.d \
 ./Core/Src/main.d \
 ./Core/Src/matrix.d \
@@ -38,6 +41,8 @@ C_DEPS += \
 
 
 # Each subdirectory must supply rules for building sources it contributes
+Core/Src/dwt_delay.o: ../Core/Src/dwt_delay.c
+	arm-none-eabi-gcc "$<" -mcpu=cortex-m4 -std=gnu11 -g3 -DUSE_HAL_DRIVER -DDEBUG -DSTM32F407xx -c -I"C:/Users/Mike/Documents/GitHub/Inverted_pendulum/Software/inverted_pendulum/Drivers/STM32F4xx_HAL_Driver/Inc" -I../Drivers/CMSIS/Include -I"C:/Users/Mike/Documents/GitHub/Inverted_pendulum/Software/inverted_pendulum/Core/Inc" -I../Drivers/STM32F4xx_HAL_Driver/Inc -I../Core/Inc -I../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I"C:/Users/Mike/Documents/GitHub/Inverted_pendulum/Software/inverted_pendulum/Drivers/CMSIS/Device/ST/STM32F4xx/Include" -I"C:/Users/Mike/Documents/GitHub/Inverted_pendulum/Software/inverted_pendulum/Drivers/CMSIS/Include" -I../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -MMD -MP -MF"Core/Src/dwt_delay.d" -MT"$@" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "$@"
 Core/Src/filter.o: ../Core/Src/filter.c
 	arm-none-eabi-gcc "$<" -mcpu=cortex-m4 -std=gnu11 -g3 -DUSE_HAL_DRIVER -DDEBUG -DSTM32F407xx -c -I"C:/Users/Mike/Documents/GitHub/Inverted_pendulum/Software/inverted_pendulum/Drivers/STM32F4xx_HAL_Driver/Inc" -I../Drivers/CMSIS/Include -I"C:/Users/Mike/Documents/GitHub/Inverted_pendulum/Software/inverted_pendulum/Core/Inc" -I../Drivers/STM32F4xx_HAL_Driver/Inc -I../Core/Inc -I../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I"C:/Users/Mike/Documents/GitHub/Inverted_pendulum/Software/inverted_pendulum/Drivers/CMSIS/Device/ST/STM32F4xx/Include" -I"C:/Users/Mike/Documents/GitHub/Inverted_pendulum/Software/inverted_pendulum/Drivers/CMSIS/Include" -I../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -MMD -MP -MF"Core/Src/filter.d" -MT"$@" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "$@"
 Core/Src/main.o: ../Core/Src/main.c
