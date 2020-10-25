@@ -86,8 +86,7 @@ float filter = 0;
 
 int16_t prev_speed = 0;
 
-float wsp1 = 0.f;
-float wsp2 = 0.f;
+float wsp = 0;
 
 /* USER CODE END PV */
 
@@ -172,7 +171,7 @@ void motor_speed(int16_t speed){
 	else{
 		if(speed < 0){
 			if(cart_position > 5){
-				if(cart_position > 30){
+				if(cart_position > 70){
 					HAL_GPIO_WritePin(MOTOR_IN1_GPIO_Port, MOTOR_IN1_Pin, GPIO_PIN_RESET);
 					HAL_GPIO_WritePin(MOTOR_IN2_GPIO_Port, MOTOR_IN2_Pin, GPIO_PIN_SET);
 					motor_pwm_duty=ramp(-speed);
@@ -191,7 +190,7 @@ void motor_speed(int16_t speed){
 		}
 		else if(speed > 0){
 			if(cart_position < 428){
-				if(cart_position < 400){
+				if(cart_position < 360){
 					HAL_GPIO_WritePin(MOTOR_IN1_GPIO_Port, MOTOR_IN1_Pin, GPIO_PIN_SET);
 					HAL_GPIO_WritePin(MOTOR_IN2_GPIO_Port, MOTOR_IN2_Pin, GPIO_PIN_RESET);
 					motor_pwm_duty=ramp(speed);
@@ -254,9 +253,7 @@ int main(void)
   /* MCU Configuration--------------------------------------------------------*/
 
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
-
-
-	HAL_Init();
+  HAL_Init();
 
   /* USER CODE BEGIN Init */
 
@@ -353,8 +350,7 @@ int main(void)
 //			  }
 //		  }
 //	  }
-	  wsp1 = 1.0; //0.7 jest git
-	  wsp2 = 0.3;
+	  wsp = 0.7;
 
 	  if(FLAG_READY){
 		  if(PWM_FLAG){
@@ -364,24 +360,24 @@ int main(void)
 
 		  if(PID_FLAG){
 			  pendulum_pid_controll = -pid_calc(&pendulum_pid, pendulum_pulse_count, 800);
-			  if(cart_position>215){
+			  if(cart_position>200){
 				  if(pendulum_pid_controll>0){
-					 pendulum_pid_controll+=wsp1*(cart_position-215);
+					 pendulum_pid_controll+=wsp*(cart_position-200);
 				  }
 				  else{
-					 pendulum_pid_controll+=wsp2*(cart_position-215);
+					 pendulum_pid_controll+=wsp*(cart_position-200);
 				  }
 			  }
 			  else if(cart_position<200){
 				  if(pendulum_pid_controll<0){
-					 pendulum_pid_controll-=wsp1*(215-cart_position);
+					 pendulum_pid_controll-=wsp*(200-cart_position);
 				  }
 				  else{
-					 pendulum_pid_controll-=wsp2*(215-cart_position);
+					 pendulum_pid_controll-=wsp*(200-cart_position);
 				  }
 			  }
 			  //motor_pid_controll = pid_calc(&motor_pid, cart_position, 215);
-			  motor_pid_controll = 0.8*pendulum_pid_controll;
+			  motor_pid_controll = pendulum_pid_controll;
 		  }
 	  }
 
@@ -648,7 +644,7 @@ static void MX_TIM11_Init(void)
 
   /* USER CODE END TIM11_Init 1 */
   htim11.Instance = TIM11;
-  htim11.Init.Prescaler = 9999;
+  htim11.Init.Prescaler = 4999;
   htim11.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim11.Init.Period = 999;
   htim11.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
