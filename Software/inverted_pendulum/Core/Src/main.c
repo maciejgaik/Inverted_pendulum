@@ -166,54 +166,51 @@ uint16_t ramp(uint16_t dest){
 }
 
 void motor_speed(int16_t speed){
-	if(speed * prev_speed < 0)
-		motor_pwm_duty=ramp(0);
-	else{
-		if(speed < 0){
-			if(cart_position > 5){
-				if(cart_position > 70){
-					HAL_GPIO_WritePin(MOTOR_IN1_GPIO_Port, MOTOR_IN1_Pin, GPIO_PIN_RESET);
-					HAL_GPIO_WritePin(MOTOR_IN2_GPIO_Port, MOTOR_IN2_Pin, GPIO_PIN_SET);
-					motor_pwm_duty=ramp(-speed);
-				}
-				else{
-					HAL_GPIO_WritePin(MOTOR_IN1_GPIO_Port, MOTOR_IN1_Pin, GPIO_PIN_SET);
-					HAL_GPIO_WritePin(MOTOR_IN2_GPIO_Port, MOTOR_IN2_Pin, GPIO_PIN_SET);
-					motor_pwm_duty=100;
-				}
+	if(speed < 0){
+		if(cart_position > 5){
+			if(cart_position > 70){
+				HAL_GPIO_WritePin(MOTOR_IN1_GPIO_Port, MOTOR_IN1_Pin, GPIO_PIN_RESET);
+				HAL_GPIO_WritePin(MOTOR_IN2_GPIO_Port, MOTOR_IN2_Pin, GPIO_PIN_SET);
+				motor_pwm_duty=ramp(-speed);
 			}
 			else{
-				HAL_GPIO_WritePin(MOTOR_IN1_GPIO_Port, MOTOR_IN1_Pin, GPIO_PIN_RESET);
-				HAL_GPIO_WritePin(MOTOR_IN2_GPIO_Port, MOTOR_IN2_Pin, GPIO_PIN_RESET);
-				motor_pwm_duty = 100;
-			}
-		}
-		else if(speed > 0){
-			if(cart_position < 428){
-				if(cart_position < 360){
-					HAL_GPIO_WritePin(MOTOR_IN1_GPIO_Port, MOTOR_IN1_Pin, GPIO_PIN_SET);
-					HAL_GPIO_WritePin(MOTOR_IN2_GPIO_Port, MOTOR_IN2_Pin, GPIO_PIN_RESET);
-					motor_pwm_duty=ramp(speed);
-				}
-				else{
-					HAL_GPIO_WritePin(MOTOR_IN1_GPIO_Port, MOTOR_IN1_Pin, GPIO_PIN_SET);
-					HAL_GPIO_WritePin(MOTOR_IN2_GPIO_Port, MOTOR_IN2_Pin, GPIO_PIN_SET);
-					motor_pwm_duty=100;
-				}
-			}
-			else{
-				HAL_GPIO_WritePin(MOTOR_IN1_GPIO_Port, MOTOR_IN1_Pin, GPIO_PIN_RESET);
-				HAL_GPIO_WritePin(MOTOR_IN2_GPIO_Port, MOTOR_IN2_Pin, GPIO_PIN_RESET);
-				motor_pwm_duty = 100;
+				HAL_GPIO_WritePin(MOTOR_IN1_GPIO_Port, MOTOR_IN1_Pin, GPIO_PIN_SET);
+				HAL_GPIO_WritePin(MOTOR_IN2_GPIO_Port, MOTOR_IN2_Pin, GPIO_PIN_SET);
+				motor_pwm_duty=100;
 			}
 		}
 		else{
-			//HAL_GPIO_WritePin(MOTOR_IN1_GPIO_Port, MOTOR_IN1_Pin, GPIO_PIN_SET);
-			//HAL_GPIO_WritePin(MOTOR_IN2_GPIO_Port, MOTOR_IN2_Pin, GPIO_PIN_SET);
-			motor_pwm_duty = ramp(0);
+			HAL_GPIO_WritePin(MOTOR_IN1_GPIO_Port, MOTOR_IN1_Pin, GPIO_PIN_RESET);
+			HAL_GPIO_WritePin(MOTOR_IN2_GPIO_Port, MOTOR_IN2_Pin, GPIO_PIN_RESET);
+			motor_pwm_duty = 100;
 		}
+		prev_speed = speed;
 	}
-	prev_speed = speed;
+	else if(speed > 0){
+		if(cart_position < 428){
+			if(cart_position < 360){
+				HAL_GPIO_WritePin(MOTOR_IN1_GPIO_Port, MOTOR_IN1_Pin, GPIO_PIN_SET);
+				HAL_GPIO_WritePin(MOTOR_IN2_GPIO_Port, MOTOR_IN2_Pin, GPIO_PIN_RESET);
+				motor_pwm_duty=ramp(speed);
+			}
+			else{
+				HAL_GPIO_WritePin(MOTOR_IN1_GPIO_Port, MOTOR_IN1_Pin, GPIO_PIN_SET);
+				HAL_GPIO_WritePin(MOTOR_IN2_GPIO_Port, MOTOR_IN2_Pin, GPIO_PIN_SET);
+				motor_pwm_duty=100;
+			}
+		}
+		else{
+			HAL_GPIO_WritePin(MOTOR_IN1_GPIO_Port, MOTOR_IN1_Pin, GPIO_PIN_RESET);
+			HAL_GPIO_WritePin(MOTOR_IN2_GPIO_Port, MOTOR_IN2_Pin, GPIO_PIN_RESET);
+			motor_pwm_duty = 100;
+		}
+		prev_speed = speed;
+	}
+	else{
+	    //HAL_GPIO_WritePin(MOTOR_IN1_GPIO_Port, MOTOR_IN1_Pin, GPIO_PIN_SET);
+		//HAL_GPIO_WritePin(MOTOR_IN2_GPIO_Port, MOTOR_IN2_Pin, GPIO_PIN_SET);
+		motor_pwm_duty = ramp(0);
+	}
 }
 
 void motor_stop(){
@@ -230,6 +227,17 @@ void motor_init(){
 	HAL_GPIO_WritePin(MOTOR_IN1_GPIO_Port, MOTOR_IN1_Pin, GPIO_PIN_RESET);
 	HAL_GPIO_WritePin(MOTOR_IN2_GPIO_Port, MOTOR_IN2_Pin, GPIO_PIN_SET);
 	motor_pwm_duty=45;
+}
+
+void motor_go(){
+	if(cart_dest>MAX_CART_POS)
+		cart_dest=MAX_CART_POS;
+	if(cart_dest-10>cart_position)
+		motor_speed(80);
+	else if(cart_dest+10<cart_position)
+		motor_speed(-80);
+	else
+		motor_stop();
 }
 
 
@@ -675,7 +683,7 @@ static void MX_TIM13_Init(void)
 
   /* USER CODE END TIM13_Init 1 */
   htim13.Instance = TIM13;
-  htim13.Init.Prescaler = 999;
+  htim13.Init.Prescaler = 499;
   htim13.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim13.Init.Period = 99;
   htim13.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
