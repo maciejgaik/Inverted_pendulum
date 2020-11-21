@@ -74,6 +74,9 @@ void Error_Handler(void);
 #define START_POS_Pin GPIO_PIN_7
 #define START_POS_GPIO_Port GPIOC
 #define START_POS_EXTI_IRQn EXTI9_5_IRQn
+#define END_POS_Pin GPIO_PIN_9
+#define END_POS_GPIO_Port GPIOC
+#define END_POS_EXTI_IRQn EXTI9_5_IRQn
 #define MOTOR_IN2_Pin GPIO_PIN_4
 #define MOTOR_IN2_GPIO_Port GPIOB
 #define MOTOR_IN1_Pin GPIO_PIN_5

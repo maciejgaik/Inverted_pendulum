@@ -6,7 +6,7 @@
  */
 #include "pid.h"
 
-void pid_init(cpid_t *pid, float p, float i, float d, int32_t dt_ms) {
+void pid_init(cpid_t *pid, float p, float i, float d, double dt_ms) {
 	pid->p = p;
 	pid->i = i;
 	pid->d = d;
@@ -29,9 +29,9 @@ void pid_init(cpid_t *pid, float p, float i, float d, int32_t dt_ms) {
 	pid->dt_ms = dt_ms;
 }
 
-int32_t pid_calc(cpid_t *pid, int32_t mv, int32_t dv) {
+double pid_calc(cpid_t *pid, double mv, double dv) {
 
-	int32_t p, i, d, e, total;
+	double p, i, d, e, total;
 	pid->mv = mv;
 	pid->dv = dv;
 

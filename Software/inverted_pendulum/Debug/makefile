@@ -15,6 +15,12 @@ RM := rm -rf
 -include objects.mk
 
 ifneq ($(MAKECMDGOALS),clean)
+ifneq ($(strip $(S_DEPS)),)
+-include $(S_DEPS)
+endif
+ifneq ($(strip $(S_UPPER_DEPS)),)
+-include $(S_UPPER_DEPS)
+endif
 ifneq ($(strip $(C_DEPS)),)
 -include $(C_DEPS)
 endif
@@ -40,8 +46,8 @@ inverted_pendulum.bin \
 all: inverted_pendulum.elf secondary-outputs
 
 # Tool invocations
-inverted_pendulum.elf: $(OBJS) $(USER_OBJS) C:\Users\Mike\Documents\GitHub\Inverted_pendulum\Software\inverted_pendulum\STM32F407VGTX_FLASH.ld
-	arm-none-eabi-gcc -o "inverted_pendulum.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\Mike\Documents\GitHub\Inverted_pendulum\Software\inverted_pendulum\STM32F407VGTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="inverted_pendulum.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+inverted_pendulum.elf: $(OBJS) $(USER_OBJS) C:\Users\mrmga\Documents\GitHub\Inverted_pendulum\Software\inverted_pendulum\STM32F407VGTX_FLASH.ld
+	arm-none-eabi-gcc -o "inverted_pendulum.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\mrmga\Documents\GitHub\Inverted_pendulum\Software\inverted_pendulum\STM32F407VGTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="inverted_pendulum.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -u _printf_float -u _scanf_float -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 

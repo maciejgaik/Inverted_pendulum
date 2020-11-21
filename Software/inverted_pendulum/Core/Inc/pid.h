@@ -10,34 +10,34 @@
 
 #include <stdint.h>
 typedef struct {
-	int32_t p;
-	int32_t i;
-	int32_t d;
+	double p;
+	double i;
+	double d;
 
-	int32_t p_max;
-	int32_t i_max;
-	int32_t d_max;
+	double p_max;
+	double i_max;
+	double d_max;
 
-	int32_t p_min;
-	int32_t i_min;
-	int32_t d_min;
+	double p_min;
+	double i_min;
+	double d_min;
 
-	int32_t dv;
-	int32_t mv;
+	double dv;
+	double mv;
 
-	int32_t e_last;
-	int32_t e_sum;
+	double e_last;
+	double e_sum;
 
-	int32_t total_max;
-	int32_t total_min;
+	double total_max;
+	double total_min;
 
-	int32_t control;
+	double control;
 
-	int32_t dt_ms;
+	double dt_ms;
 } cpid_t;
 
-void pid_init(cpid_t *pid, float p, float i, float d, int32_t dt_ms);
+void pid_init(cpid_t *pid, float p, float i, float d, double dt_ms);
 
-int32_t pid_calc(cpid_t *pid, int32_t mv, int32_t dv);
+double pid_calc(cpid_t *pid, double mv, double dv);
 
 #endif /* INC_PID_H_ */
