@@ -50,9 +50,11 @@
 TIM_HandleTypeDef htim1;
 TIM_HandleTypeDef htim3;
 TIM_HandleTypeDef htim4;
+TIM_HandleTypeDef htim6;
 TIM_HandleTypeDef htim10;
 TIM_HandleTypeDef htim11;
 TIM_HandleTypeDef htim13;
+DMA_HandleTypeDef hdma_tim3_ch4_up;
 DMA_HandleTypeDef hdma_tim4_ch1;
 
 UART_HandleTypeDef huart2;
@@ -67,9 +69,10 @@ uint8_t START_BALANCING = 0;
 uint8_t LED_FLAG = 0;
 uint8_t MOTOR_FLAG = 0;
 uint8_t FLAG_READY = 0;
-uint8_t PID_PENDULUM_FLAG = 0;
+uint8_t MOTOR_PID_FLAG = 0;
 uint8_t PWM_FLAG = 0;
 uint8_t ERROR_FLAG = 0;
+uint8_t PENDULUM_PID_FLAG = 0;
 
 volatile int16_t pendulum_pulse_count = 0;
 volatile double pendulum_degree = 0;
@@ -95,10 +98,12 @@ double filter = 0;
 
 int16_t prev_speed = 0;
 
-double wsp1 = 0.8;
-double wsp2 = 0.4;
+double wsp1 = 0.2;
 
 char buf[50] = {0};
+
+int32_t pData1 = 0;
+int32_t pData2 = 0;
 
 /* USER CODE END PV */
 
@@ -113,6 +118,7 @@ static void MX_TIM10_Init(void);
 static void MX_TIM11_Init(void);
 static void MX_TIM13_Init(void);
 static void MX_USART2_UART_Init(void);
+static void MX_TIM6_Init(void);
 /* USER CODE BEGIN PFP */
 
 int16_t alfa_beta(){
@@ -155,22 +161,24 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 		LED_FLAG = 1;
 	}
 	else if(htim==&htim11){
-		PID_PENDULUM_FLAG = 1;
+		MOTOR_PID_FLAG = 1;
 	}
 	else if(htim==&htim13){
 		PWM_FLAG = 1;
-		//filter = alfa_beta();
+	}
+	else if(htim==&htim6){
+		PENDULUM_PID_FLAG = 1;
 	}
 }
 
 void parse(){
 	char header[2];
 	double _p=0.0, _i=0.0, _d=0.0, _x=0.0, _y=0.0;
-	wsp1=sscanf(buf, "%s %lf %lf %lf %lf %lf", &header, &_p, &_i, &_d, &_x, &_y);
+	sscanf(buf, "%s %lf %lf %lf %lf %lf %lf", &header, &_p, &_i, &_d, &_x, &_y);
 	if(!strcmp(header, "P")){
 		if(_p>=0.0 && _p<=50.0) pendulum_pid.p = -_p;
 		if(_i>=0.0 && _i<=50.0) pendulum_pid.i = _i;
-		if(_d>=0.0 && _d<=50.0) pendulum_pid.d = _d;
+		if(_d>=0.0 && _d<=50.0) wsp1 = _d;
 		if(_x>=0.0 && _x<=50.0) motor_pid.p = _x;
 		if(_y>=0.0 && _y<=50.0) motor_pid.d = _y;
 	}
@@ -180,23 +188,23 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
 	uint16_t size = 0;
 	uint8_t data[50];
 	parse();
-	size = sprintf(data, "{\"mp\":%.1f,\"mi\":%.1f,\"md\":%.1f,\"pp\":%.1f,\"pd\":%.1f}", -pendulum_pid.p, pendulum_pid.i, pendulum_pid.d, motor_pid.p, motor_pid.d);
+	size = sprintf(data, "{\"mp\":%.1f,\"mi\":%.1f,\"md\":%.1f,\"pp\":%.1f,\"pd\":%.1f}", -pendulum_pid.p, pendulum_pid.i, wsp1, motor_pid.p, motor_pid.d);
 	HAL_UART_Transmit_IT(&huart2, data, size);
 	HAL_UART_Receive_IT(&huart2, &buf, 28);
 }
 
 uint16_t ramp(uint16_t dest){
 	int16_t ramp_duty = 0;
-	//if(dest != 0 ) dest = 0.9*dest+10;
-	if(dest/10 == motor_pwm_duty/10) return motor_pwm_duty;
+	if(dest > 0 && dest < 27 ) dest = 27;
+	if(dest/5 == motor_pwm_duty/5) return motor_pwm_duty;
 	else{
 		if(dest > motor_pwm_duty){
-			ramp_duty=motor_pwm_duty+10;
+			ramp_duty=motor_pwm_duty+5;
 			if(ramp_duty>=100) return 100;
 			else return ramp_duty;
 		}
 		else{
-			ramp_duty=motor_pwm_duty-10;
+			ramp_duty=motor_pwm_duty-5;
 			if(ramp_duty<=0) return 0;
 			else return ramp_duty;
 		}
@@ -246,8 +254,6 @@ void motor_speed(int16_t speed){
 			}
 		}
 		else{
-			//HAL_GPIO_WritePin(MOTOR_IN1_GPIO_Port, MOTOR_IN1_Pin, GPIO_PIN_SET);
-			//HAL_GPIO_WritePin(MOTOR_IN2_GPIO_Port, MOTOR_IN2_Pin, GPIO_PIN_SET);
 			motor_pwm_duty = ramp(0);
 		}
 	}
@@ -269,11 +275,6 @@ void motor_init(){
 	HAL_GPIO_WritePin(MOTOR_IN2_GPIO_Port, MOTOR_IN2_Pin, GPIO_PIN_SET);
 	motor_pwm_duty=30;
 }
-
-//int _write(int file, char *ptr, int len){
-//	HAL_UART_Transmit_DMA(&huart2, ptr, len);
-//	return len;
-//}
 
 
 /* USER CODE END PFP */
@@ -319,24 +320,23 @@ int main(void)
   MX_TIM11_Init();
   MX_TIM13_Init();
   MX_USART2_UART_Init();
+  MX_TIM6_Init();
   /* USER CODE BEGIN 2 */
 
   HAL_TIM_Encoder_Start(&htim1, TIM_CHANNEL_ALL);
   HAL_TIM_Encoder_Start(&htim3, TIM_CHANNEL_ALL);
+  //HAL_TIM_Encoder_Start_DMA(&htim3, TIM_CHANNEL_ALL, pData1, pData2, 8);
 
   HAL_TIM_Base_Start_IT(&htim10);
   HAL_TIM_Base_Start_IT(&htim11);
   HAL_TIM_Base_Start_IT(&htim13);
+  HAL_TIM_Base_Start_IT(&htim6);
 
   HAL_TIM_PWM_Start_DMA(&htim4, TIM_CHANNEL_1, &motor_pwm_duty, 1);
 
-  //HAL_UART_
-
   motor_init();
 
-	pid_init(&motor_pid, 5.0, 0.0, 10.0, 20);
-	//pid_init(&motor_pid, 2.f, 1.9, 1.5, 5);
-	//pid_init(&motor_pid, 4.f, 1.5, 0.5, 5);
+	pid_init(&motor_pid, 5.0, 0.0, 0.7, 20);
 	motor_pid.p_max = 4095;
 	motor_pid.p_min = -4095;
 	motor_pid.i_max = 4095;
@@ -347,7 +347,7 @@ int main(void)
 	motor_pid.total_min = -100;
 
 
-	pid_init(&pendulum_pid, -40.f, 5.0, 2.0f, 2);
+	pid_init(&pendulum_pid, -40.f, 2.0, 0.0f, 2);
 	pendulum_pid.p_max = 4095;
 	pendulum_pid.p_min = -4095;
 	pendulum_pid.i_max = 4095;
@@ -357,8 +357,6 @@ int main(void)
 	pendulum_pid.total_max = 100;
 	pendulum_pid.total_min = -100;
 
-//	size = sprintf(buf, "{\"p\":%.1f,\"i\":%.1f,\"d\":%.1f,\"x\":%.2f,\"y\":%.2f}", pendulum_pid.p, pendulum_pid.i, pendulum_pid.d, wsp1, wsp2);
-//	HAL_UART_Transmit_IT(&huart2, buf, size);
 	HAL_UART_Receive_IT(&huart2, buf, 28);
 
 
@@ -382,8 +380,6 @@ int main(void)
 	  if(LED_FLAG && !ERROR_FLAG){
 		  HAL_GPIO_TogglePin(LED_B_GPIO_Port, LED_B_Pin);
 		  LED_FLAG = 0;
-		  //sprintf(buf, "{\"p\":%d,\"i\":%d,\"d\":%d,\"x\":%f,\"y\":%f}", pendulum_pid.p, pendulum_pid.i, pendulum_pid.d, wsp1, wsp2);
-		  //HAL_UART_Transmit(&huart2, &buf, strlen(buf), 50);
 	  }
 
 	  if(LED_FLAG && ERROR_FLAG){
@@ -407,29 +403,16 @@ int main(void)
 	  if(FLAG_READY){
 		  if(PWM_FLAG){
 			  PWM_FLAG=0;
-			  pendulum_pid_controll = pid_calc(&pendulum_pid, pendulum_pulse_count, 800);
-			  pid_controll = pendulum_pid_controll-motor_pid_controll;
+			  pid_controll = pendulum_pid_controll-wsp1*motor_pid_controll;
 			  motor_speed(pid_controll);
 		  }
-
-		  if(PID_PENDULUM_FLAG){
-//			  if(cart_position>215){
-//				  if(pendulum_pid_controll>0){
-//					 pendulum_pid_controll+=wsp1*(cart_position-215);
-//				  }
-//				  else{
-//					 pendulum_pid_controll+=wsp2*(cart_position-215);
-//				  }
-//			  }
-//			  else if(cart_position<215){
-//				  if(pendulum_pid_controll<0){
-//					 pendulum_pid_controll-=wsp1*(215-cart_position);
-//				  }
-//				  else{
-//					 pendulum_pid_controll-=wsp2*(215-cart_position);
-//				  }
-//			  }
+		  if(PENDULUM_PID_FLAG){
+			  PENDULUM_PID_FLAG=0;
+			  pendulum_pid_controll = pid_calc(&pendulum_pid, pendulum_pulse_count, 800);
+		  }
+		  if(MOTOR_PID_FLAG){
 			  motor_pid_controll = pid_calc(&motor_pid, cart_position, 215);
+			  MOTOR_PID_FLAG=0;
 		  }
 	  }
 
@@ -652,6 +635,44 @@ static void MX_TIM4_Init(void)
 }
 
 /**
+  * @brief TIM6 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM6_Init(void)
+{
+
+  /* USER CODE BEGIN TIM6_Init 0 */
+
+  /* USER CODE END TIM6_Init 0 */
+
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+
+  /* USER CODE BEGIN TIM6_Init 1 */
+
+  /* USER CODE END TIM6_Init 1 */
+  htim6.Instance = TIM6;
+  htim6.Init.Prescaler = 999;
+  htim6.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim6.Init.Period = 999;
+  htim6.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim6) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim6, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM6_Init 2 */
+
+  /* USER CODE END TIM6_Init 2 */
+
+}
+
+/**
   * @brief TIM10 Initialization Function
   * @param None
   * @retval None
@@ -700,7 +721,7 @@ static void MX_TIM11_Init(void)
   htim11.Instance = TIM11;
   htim11.Init.Prescaler = 999;
   htim11.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim11.Init.Period = 999;
+  htim11.Init.Period = 4999;
   htim11.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim11.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim11) != HAL_OK)
@@ -790,6 +811,9 @@ static void MX_DMA_Init(void)
   /* DMA1_Stream0_IRQn interrupt configuration */
   HAL_NVIC_SetPriority(DMA1_Stream0_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(DMA1_Stream0_IRQn);
+  /* DMA1_Stream2_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Stream2_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Stream2_IRQn);
   /* DMA1_Stream5_IRQn interrupt configuration */
   HAL_NVIC_SetPriority(DMA1_Stream5_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(DMA1_Stream5_IRQn);
