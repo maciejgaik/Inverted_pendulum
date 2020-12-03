@@ -1,7 +1,7 @@
 main.c:125:6:HAL_GPIO_EXTI_Callback	16	static
 main.c:137:6:HAL_TIM_PeriodElapsedCallback	16	static
 main.c:154:6:parse	96	static
-main.c:171:6:HAL_UART_RxCpltCallback	168	static
+main.c:171:6:HAL_UART_RxCpltCallback	200	static
 main.c:180:10:ramp	24	static
 main.c:198:6:motor_speed	16	static
 main.c:247:6:motor_stop	8	static

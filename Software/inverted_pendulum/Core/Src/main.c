@@ -75,7 +75,7 @@ uint8_t ERROR_FLAG = 0;
 uint8_t PENDULUM_PID_FLAG = 0;
 
 volatile int16_t pendulum_pulse_count = 0;
-volatile double pendulum_degree = 0;
+double alpha = 0;
 
 volatile int16_t motor_pulse_count = 0;
 volatile int16_t cart_position = 0;
@@ -98,7 +98,7 @@ double filter = 0;
 
 int16_t prev_speed = 0;
 
-double wsp1 = 0.8;
+double wsp1 = 0.5;
 
 char buf[70] = {0};
 
@@ -170,7 +170,7 @@ void parse(){
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
 	uint16_t size = 0;
-	uint8_t data[70];
+	uint8_t data[100];
 	parse();
 	size = sprintf(data, "{\"mp\":%.2f,\"mi\":%.2f,\"md\":%.2f,\"pp\":%.2f,\"pd\":%.2f,\"wsp\":%.2f}", pendulum_pid.p, pendulum_pid.i, pendulum_pid.d, motor_pid.p, motor_pid.d, wsp1);
 	HAL_UART_Transmit_IT(&huart2, data, size);
@@ -257,7 +257,7 @@ void motor_init(){
 	HAL_Delay(100);
 	HAL_GPIO_WritePin(MOTOR_IN1_GPIO_Port, MOTOR_IN1_Pin, GPIO_PIN_RESET);
 	HAL_GPIO_WritePin(MOTOR_IN2_GPIO_Port, MOTOR_IN2_Pin, GPIO_PIN_SET);
-	motor_pwm_duty=30;
+	motor_pwm_duty=35;
 }
 
 
@@ -356,7 +356,7 @@ int main(void)
     /* USER CODE BEGIN 3 */
 
 	  pendulum_pulse_count = TIM3->CNT;
-	  pendulum_degree = pendulum_pulse_count*360.0/1600.0;
+	  alpha = 180-pendulum_pulse_count*360.0/1600.0;
 
 	  motor_pulse_count = TIM1->CNT;
 	  cart_position = -motor_pulse_count/64.0/19.0*25.7*PI;
@@ -387,7 +387,7 @@ int main(void)
 	  if(FLAG_READY){
 		  if(PWM_FLAG){
 			  PWM_FLAG=0;
-			  pid_controll = pendulum_pid_controll-0.5*motor_pid_controll;
+			  pid_controll = pendulum_pid_controll-wsp1*motor_pid_controll;
 			  motor_speed(pid_controll);
 		  }
 		  if(PENDULUM_PID_FLAG){
