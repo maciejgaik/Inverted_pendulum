@@ -1,5 +1,5 @@
 %\documentclass[printmode,oneside,eng]{mgr}  % do publikacji elektronicznej
-\documentclass[oneside,printmode,eng]{mgr}  % do wydruku dwustronnego
+\documentclass[printmode,eng]{mgr}  % do wydruku dwustronnego
 %\documentclass[printmode,eng,draft]{mgr}  % do wydruku dwustronnego w~wersji roboczej
 
 %----------------------| Input encoding configuration |
@@ -23,13 +23,13 @@
 %\usepackage{antpolt}
 %% alternatywny wybór Antykwy Toruńskiej - bardziej "współczesnej",
 %% całkowicie polskiej czcionki
-%\usepackage{anttor}             % ZALECANA DO SKŁADU TEKSTÓW PO POLSKU
+\usepackage{anttor}             % ZALECANA DO SKŁADU TEKSTÓW PO POLSKU
 %\usepackage[math]{anttor}      % math włącza antykwę także w~matematyce
                                 % ale chyba coś psuje :( (np. brak strzałek)
 
 %% alternatywnie wybór czcionki URW Palladio
-\usepackage{newpxtext}  % Palatino font
-\linespread{1.05}  % Palatino needs more leading space (between lines)
+%\usepackage{newpxtext}  % Palatino font
+%\linespread{1.05}  % Palatino needs more leading space (between lines)
 
 %% ustawienie czcionki eulerowskiej do składu wyrażeń matematycznych
 %\usepackage[euler-digits,small]{eulervm}
@@ -55,9 +55,6 @@
 \usepackage{gensymb}
 %% zmiana formatowania tytulariów
 %\usepackage[raggedleft]{titlesec}
-
-\usepackage{xcolor}
-\usepackage{tcolorbox}
 
 \usepackage[titles]{tocloft}    % do formatowani spisów
 
@@ -278,12 +275,10 @@
 %\input{sources/font-note}   %przykładowa wersja angielska notki
 
 %% część właściwa dokumentu
-\include{praca_dyplomowa/sources/00_Wstep}
-\include{praca_dyplomowa/sources/01_wprowadzenie_matematyczne}
-\include{praca_dyplomowa/sources/02_symulacja}
-\include{praca_dyplomowa/sources/03_konstrukcja}
-\include{praca_dyplomowa/sources/04_sterowanie}
-\include{praca_dyplomowa/sources/50_zakonczenie}
+\include{sources/00_Wstep}
+\include{sources/01_wprowadzenie_matematyczne}
+\include{sources/02_konstrukcja}
+\include{sources/50_zakonczenie}
 
 \cleardoublepage
 \phantomsection
