@@ -376,12 +376,17 @@ int main(void)
 		  motor_stop();
 		  TIM1->CNT=0;
 		  START_POSITION_FLAG=0;
-		  timer_1=HAL_GetTick();
+	  }
+
+	  if(END_POSITION_FLAG && !FLAG_READY){
+		  END_POSITION_FLAG=0;
 	  }
 
 	  if((START_POSITION_FLAG || END_POSITION_FLAG) && FLAG_READY){
 		  motor_stop();
 		  ERROR_FLAG = 1;
+		  START_POSITION_FLAG=0;
+		  END_POSITION_FLAG=0;
 	  }
 
 	  if(FLAG_READY){
